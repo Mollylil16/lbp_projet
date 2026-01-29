@@ -1,0 +1,197 @@
+/**
+ * Styles pour le Dark Mode
+ * Variables CSS pour le thème sombre
+ */
+
+:root {
+  /* Variables pour le mode clair (défaut) */
+  --lbp-bg-primary: #ffffff;
+  --lbp-bg-secondary: #f5f5f5;
+  --lbp-bg-tertiary: #fafafa;
+  --lbp-text-primary: #262626;
+  --lbp-text-secondary: #8c8c8c;
+  --lbp-border: #d9d9d9;
+  --lbp-shadow: rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode {
+  /* Variables pour le mode sombre */
+  --lbp-bg-primary: #1f1f1f;
+  --lbp-bg-secondary: #141414;
+  --lbp-bg-tertiary: #0d0d0d;
+  --lbp-text-primary: #ffffff;
+  --lbp-text-secondary: #a6a6a6;
+  --lbp-border: #434343;
+  --lbp-shadow: rgba(0, 0, 0, 0.5);
+  
+  /* Couleurs de fond */
+  background-color: var(--lbp-bg-secondary);
+  color: var(--lbp-text-primary);
+  
+  /* Transition fluide */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dark-mode body {
+  background-color: var(--lbp-bg-secondary);
+  color: var(--lbp-text-primary);
+}
+
+/* Cards */
+.dark-mode .ant-card {
+  background-color: var(--lbp-bg-primary);
+  border-color: var(--lbp-border);
+  color: var(--lbp-text-primary);
+}
+
+/* Inputs */
+.dark-mode .ant-input,
+.dark-mode .ant-input-number,
+.dark-mode .ant-select-selector,
+.dark-mode .ant-picker {
+  background-color: var(--lbp-bg-primary);
+  border-color: var(--lbp-border);
+  color: var(--lbp-text-primary);
+}
+
+.dark-mode .ant-input:focus,
+.dark-mode .ant-input-number:focus,
+.dark-mode .ant-select-focused .ant-select-selector {
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+/* Tables */
+.dark-mode .ant-table {
+  background-color: var(--lbp-bg-primary);
+  color: var(--lbp-text-primary);
+}
+
+.dark-mode .ant-table-thead > tr > th {
+  background-color: var(--lbp-bg-secondary);
+  border-color: var(--lbp-border);
+  color: var(--lbp-text-primary);
+}
+
+.dark-mode .ant-table-tbody > tr {
+  background-color: var(--lbp-bg-primary);
+  border-color: var(--lbp-border);
+}
+
+.dark-mode .ant-table-tbody > tr:hover > td {
+  background-color: var(--lbp-bg-secondary);
+}
+
+/* Modals */
+.dark-mode .ant-modal-content {
+  background-color: var(--lbp-bg-primary);
+  border-color: var(--lbp-border);
+}
+
+.dark-mode .ant-modal-header {
+  background-color: var(--lbp-bg-primary);
+  border-bottom-color: var(--lbp-border);
+}
+
+.dark-mode .ant-modal-title {
+  color: var(--lbp-text-primary);
+}
+
+.dark-mode .ant-modal-body {
+  color: var(--lbp-text-primary);
+}
+
+/* Menus */
+.dark-mode .ant-menu {
+  background-color: var(--lbp-bg-primary);
+  border-color: var(--lbp-border);
+  color: var(--lbp-text-primary);
+}
+
+.dark-mode .ant-menu-item:hover,
+.dark-mode .ant-menu-submenu-title:hover {
+  background-color: var(--lbp-bg-secondary);
+  color: var(--lbp-text-primary);
+}
+
+.dark-mode .ant-menu-item-selected {
+  background-color: rgba(102, 126, 234, 0.2);
+  color: #667eea;
+}
+
+/* Sidebar */
+.dark-mode .main-sider {
+  background-color: var(--lbp-bg-primary);
+  border-right-color: var(--lbp-border);
+}
+
+/* Header */
+.dark-mode .main-header {
+  background-color: var(--lbp-bg-primary);
+  border-bottom-color: var(--lbp-border);
+}
+
+/* Content */
+.dark-mode .main-content {
+  background-color: var(--lbp-bg-primary);
+  color: var(--lbp-text-primary);
+}
+
+/* Text colors */
+.dark-mode .ant-typography {
+  color: var(--lbp-text-primary);
+}
+
+.dark-mode .ant-typography-text-secondary {
+  color: var(--lbp-text-secondary);
+}
+
+/* Links */
+.dark-mode a {
+  color: #667eea;
+}
+
+.dark-mode a:hover {
+  color: #8b9aff;
+}
+
+/* Dividers */
+.dark-mode .ant-divider {
+  border-color: var(--lbp-border);
+}
+
+/* Empty states */
+.dark-mode .empty-state-container {
+  color: var(--lbp-text-primary);
+}
+
+/* Skeleton loaders */
+.dark-mode .ant-skeleton-content .ant-skeleton-title,
+.dark-mode .ant-skeleton-content .ant-skeleton-paragraph > li {
+  background: linear-gradient(90deg, var(--lbp-bg-secondary) 25%, var(--lbp-bg-tertiary) 37%, var(--lbp-bg-secondary) 63%);
+}
+
+/* Scrollbars */
+.dark-mode ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark-mode ::-webkit-scrollbar-track {
+  background: var(--lbp-bg-secondary);
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+  background: var(--lbp-border);
+  border-radius: 4px;
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: #595959;
+}
+
+/* Transitions */
+.theme-light,
+.theme-dark {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}

@@ -1,0 +1,348 @@
+/**
+ * Template de facture avec en-tête et pied de page LBP
+ * Utilise les images entete_lbp.png et footer_lbp.png
+ */
+
+import React from "react";
+import {
+  Card,
+  Descriptions,
+  Table,
+  Divider,
+  Typography,
+  Space,
+  Tag,
+} from "antd";
+import type { FactureColis } from "@/types";
+import {
+  formatDate,
+  formatMontantWithDevise,
+  formatRefColis,
+} from "@utils/format";
+import dayjs from "dayjs";
+import "./FactureTemplate.css";
+
+const { Title, Text } = Typography;
+
+interface FactureTemplateProps {
+  facture: FactureColis;
+  colis?: {
+    client_colis?: {
+      nom_exp?: string;
+      tel_exp?: string;
+      email_exp?: string;
+    };
+    nom_destinataire?: string;
+    lieu_dest?: string;
+    tel_dest?: string;
+    email_dest?: string;
+    nom_marchandise?: string;
+    nbre_colis?: number;
+    nbre_articles?: number;
+    poids_total?: number;
+    prix_unit?: number;
+    prix_emballage?: number;
+    prix_assurance?: number;
+    prix_agence?: number;
+    total_montant?: number;
+  };
+  mode?: "preview" | "print" | "pdf";
+}
+
+export const FactureTemplate: React.FC<FactureTemplateProps> = ({
+  facture,
+  colis,
+  mode = "preview",
+}) => {
+  const isProforma = facture.etat === 0;
+
+  // Chemins des images (à utiliser côté backend pour PDF)
+  const headerImagePath = "/images/entete_lbp.png";
+  const footerImagePath = "/images/footer_lbp.png";
+
+  // Calcul des montants
+  const montantHT = colis?.total_montant || facture.total_mont_ttc || 0;
+  const tva = 0; // Pas de TVA pour l'instant
+  const montantTTC = facture.total_mont_ttc;
+
+  return (
+    <div
+      className={`facture-template-container ${
+        mode === "print" || mode === "pdf" ? "print-mode" : ""
+      }`}
+    >
+      {/* En-tête avec image */}
+      <div className="facture-header">
+        <img
+          src={headerImagePath}
+          alt="En-tête LBP"
+          style={{
+            maxWidth: "100%",
+            height: "auto",
+            marginBottom: 16,
+          }}
+          onError={(e) => {
+            // Fallback si l'image n'existe pas
+            const target = e.target as HTMLImageElement;
+            target.style.display = "none";
+          }}
+        />
+        {isProforma && (
+          <Tag className="facture-type-tag" color="orange">
+            FACTURE PROFORMA
+          </Tag>
+        )}
+        {!isProforma && (
+          <Tag className="facture-type-tag" color="green">
+            FACTURE DÉFINITIVE
+          </Tag>
+        )}
+      </div>
+
+      {/* Informations facture */}
+      <Space
+        direction="vertical"
+        style={{ width: "100%", marginBottom: 32 }}
+        size="large"
+      >
+        <div className="facture-info-section">
+          <Descriptions bordered column={{ xs: 1, sm: 2, md: 3 }} size="small">
+            <Descriptions.Item label="N° Facture" span={1}>
+              <Text strong style={{ fontSize: 16, color: "#1890ff" }}>
+                {facture.num_fact_colis}
+              </Text>
+            </Descriptions.Item>
+            <Descriptions.Item label="Date" span={1}>
+              <Text>{formatDate(facture.date_fact)}</Text>
+            </Descriptions.Item>
+            <Descriptions.Item label="Référence Colis" span={1}>
+              <Text>{formatRefColis(facture.ref_colis)}</Text>
+            </Descriptions.Item>
+          </Descriptions>
+        </div>
+
+        {/* Informations expéditeur et destinataire */}
+        <div className="facture-addresses">
+          {/* Expéditeur */}
+          {colis?.client_colis && (
+            <Card
+              title="Expéditeur"
+              size="small"
+              className="facture-address-card"
+            >
+              <Space direction="vertical" size="small">
+                <Text strong>{colis.client_colis.nom_exp || "-"}</Text>
+                {colis.client_colis.tel_exp && (
+                  <Text>{colis.client_colis.tel_exp}</Text>
+                )}
+                {colis.client_colis.email_exp && (
+                  <Text type="secondary">{colis.client_colis.email_exp}</Text>
+                )}
+              </Space>
+            </Card>
+          )}
+
+          {/* Destinataire */}
+          {colis && (
+            <Card
+              title="Destinataire"
+              size="small"
+              className="facture-address-card"
+            >
+              <Space direction="vertical" size="small">
+                <Text strong>{colis.nom_destinataire || "-"}</Text>
+                {colis.lieu_dest && <Text>{colis.lieu_dest}</Text>}
+                {colis.tel_dest && <Text>{colis.tel_dest}</Text>}
+                {colis.email_dest && (
+                  <Text type="secondary">{colis.email_dest}</Text>
+                )}
+              </Space>
+            </Card>
+          )}
+        </div>
+
+        {/* Détails de la marchandise */}
+        {colis && (
+          <div className="facture-items-table">
+            <Table
+              dataSource={[
+                {
+                  key: "1",
+                  description: colis.nom_marchandise || "Marchandise",
+                  quantite: colis.nbre_colis || 1,
+                  unite: "Colis",
+                  poids: `${colis.poids_total || 0} Kg`,
+                  prix_unitaire: colis.prix_unit || 0,
+                  prix_emballage: colis.prix_emballage || 0,
+                  prix_assurance: colis.prix_assurance || 0,
+                  prix_agence: colis.prix_agence || 0,
+                  montant: colis.total_montant || 0,
+                },
+              ]}
+              columns={[
+                {
+                  title: "Description",
+                  dataIndex: "description",
+                  key: "description",
+                  width: "30%",
+                },
+                {
+                  title: "Quantité",
+                  dataIndex: "quantite",
+                  key: "quantite",
+                  align: "center",
+                  width: "10%",
+                },
+                {
+                  title: "Unité",
+                  dataIndex: "unite",
+                  key: "unite",
+                  align: "center",
+                  width: "8%",
+                },
+                {
+                  title: "Poids",
+                  dataIndex: "poids",
+                  key: "poids",
+                  align: "center",
+                  width: "10%",
+                },
+                {
+                  title: "Prix unitaire",
+                  dataIndex: "prix_unitaire",
+                  key: "prix_unitaire",
+                  align: "right",
+                  width: "12%",
+                  render: (value: number) => formatMontantWithDevise(value),
+                },
+                {
+                  title: "Montant",
+                  dataIndex: "montant",
+                  key: "montant",
+                  align: "right",
+                  width: "15%",
+                  render: (value: number) => (
+                    <Text strong style={{ fontSize: 14 }}>
+                      {formatMontantWithDevise(value)}
+                    </Text>
+                  ),
+                },
+              ]}
+              pagination={false}
+              size="small"
+              bordered
+              summary={() => (
+                <Table.Summary>
+                  <Table.Summary.Row>
+                    <Table.Summary.Cell index={0} colSpan={5} align="right">
+                      <Text strong>Montant HT:</Text>
+                    </Table.Summary.Cell>
+                    <Table.Summary.Cell index={1} align="right">
+                      <Text strong>{formatMontantWithDevise(montantHT)}</Text>
+                    </Table.Summary.Cell>
+                  </Table.Summary.Row>
+                  {tva > 0 && (
+                    <Table.Summary.Row>
+                      <Table.Summary.Cell index={0} colSpan={5} align="right">
+                        <Text>TVA (18%):</Text>
+                      </Table.Summary.Cell>
+                      <Table.Summary.Cell index={1} align="right">
+                        <Text>{formatMontantWithDevise(tva)}</Text>
+                      </Table.Summary.Cell>
+                    </Table.Summary.Row>
+                  )}
+                  <Table.Summary.Row>
+                    <Table.Summary.Cell index={0} colSpan={5} align="right">
+                      <Text strong style={{ fontSize: 16, color: "#1890ff" }}>
+                        Montant TTC:
+                      </Text>
+                    </Table.Summary.Cell>
+                    <Table.Summary.Cell index={1} align="right">
+                      <Text strong style={{ fontSize: 16, color: "#1890ff" }}>
+                        {formatMontantWithDevise(montantTTC)}
+                      </Text>
+                    </Table.Summary.Cell>
+                  </Table.Summary.Row>
+                </Table.Summary>
+              )}
+            />
+          </div>
+        )}
+
+        {/* Montant total si pas de détails colis */}
+        {!colis && (
+          <Card
+            style={{ backgroundColor: "#f0f2f5", border: "2px solid #1890ff" }}
+          >
+            <Space
+              direction="vertical"
+              style={{ width: "100%" }}
+              align="end"
+              size="small"
+            >
+              <Text type="secondary">Montant TTC</Text>
+              <Text strong style={{ fontSize: 24, color: "#1890ff" }}>
+                {formatMontantWithDevise(montantTTC)}
+              </Text>
+            </Space>
+          </Card>
+        )}
+      </Space>
+
+      <Divider />
+
+      {/* Notes et conditions */}
+      <div className="facture-notes">
+        <Text type="secondary">
+          <strong>Conditions de paiement:</strong> Paiement à réception de la
+          facture
+        </Text>
+        <br />
+        <Text type="secondary">
+          <strong>Validité:</strong> Cette facture est valable 30 jours à
+          compter de la date d'émission
+        </Text>
+      </div>
+
+      {/* Pied de page avec image */}
+      <div className="facture-footer">
+        <img
+          src={footerImagePath}
+          alt="Pied de page LBP"
+          style={{
+            maxWidth: "100%",
+            height: "auto",
+          }}
+          onError={(e) => {
+            // Fallback si l'image n'existe pas
+            const target = e.target as HTMLImageElement;
+            target.style.display = "none";
+          }}
+        />
+      </div>
+
+      {/* Informations supplémentaires au pied de page */}
+      <div className="facture-footer-info">
+        <Text type="secondary">
+          Facture générée le {dayjs().format("DD/MM/YYYY à HH:mm")} par{" "}
+          {facture.code_user || "Système"}
+        </Text>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Configuration pour le backend - Chemins des images à utiliser dans le PDF
+ */
+export const FACTURE_IMAGES_CONFIG = {
+  header: "/images/entete_lbp.png",
+  footer: "/images/footer_lbp.png",
+  // Chemins absolus pour le backend (à adapter selon l'environnement)
+  headerAbsolute: import.meta.env.BASE_URL
+    ? `${import.meta.env.BASE_URL}images/entete_lbp.png`
+    : "/images/entete_lbp.png",
+  footerAbsolute: import.meta.env.BASE_URL
+    ? `${import.meta.env.BASE_URL}images/footer_lbp.png`
+    : "/images/footer_lbp.png",
+} as const;

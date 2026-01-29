@@ -1,0 +1,246 @@
+/* Styles pour le template de facture */
+
+.facture-template-container {
+  font-family: 'Arial', 'Helvetica', sans-serif;
+  background: white;
+  color: #333;
+  line-height: 1.6;
+}
+
+.facture-template-container.print-mode {
+  padding: 0;
+  min-height: auto;
+}
+
+.facture-header {
+  margin-bottom: 40px;
+  text-align: center;
+  border-bottom: 3px solid #667eea;
+  padding-bottom: 20px;
+}
+
+.facture-header img {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 16px;
+}
+
+.facture-header .facture-type-tag {
+  font-size: 18px;
+  font-weight: 700;
+  padding: 12px 24px;
+  margin-top: 16px;
+  display: inline-block;
+  border-radius: 8px;
+  letter-spacing: 1px;
+}
+
+.facture-info-section {
+  margin-bottom: 32px;
+  background: #f9fafb;
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.facture-info-section .ant-descriptions-item-label {
+  font-weight: 600;
+  color: #555;
+}
+
+.facture-info-section .ant-descriptions-item-content {
+  color: #333;
+}
+
+.facture-addresses {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.facture-address-card {
+  flex: 1;
+  min-width: 250px;
+  background: #ffffff;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.3s;
+}
+
+.facture-address-card:hover {
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.facture-address-card .ant-card-head {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px 8px 0 0;
+}
+
+.facture-address-card .ant-card-head-title {
+  color: white;
+  font-weight: 600;
+}
+
+.facture-items-table {
+  margin-bottom: 32px;
+}
+
+.facture-items-table .ant-table {
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.facture-items-table .ant-table-thead > tr > th {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+  text-align: center;
+  border: none;
+  padding: 12px 8px;
+}
+
+.facture-items-table .ant-table-tbody > tr > td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 8px;
+}
+
+.facture-items-table .ant-table-tbody > tr:hover > td {
+  background: #f9fafb;
+}
+
+.facture-total-section {
+  background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%);
+  border: 2px solid #667eea;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+}
+
+.facture-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.facture-total-row:last-child {
+  border-bottom: none;
+  border-top: 2px solid #667eea;
+  margin-top: 12px;
+  padding-top: 20px;
+}
+
+.facture-total-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.facture-total-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.facture-total-row:last-child .facture-total-label {
+  font-size: 20px;
+}
+
+.facture-total-row:last-child .facture-total-value {
+  font-size: 28px;
+}
+
+.facture-notes {
+  margin-bottom: 32px;
+  padding: 20px;
+  background: #fffbf0;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.8;
+}
+
+.facture-notes strong {
+  color: #333;
+  font-weight: 600;
+}
+
+.facture-footer {
+  margin-top: 60px;
+  padding-top: 24px;
+  border-top: 2px solid #e5e7eb;
+  text-align: center;
+}
+
+.facture-footer img {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 16px;
+}
+
+.facture-footer-info {
+  margin-top: 16px;
+  font-size: 11px;
+  color: #999;
+}
+
+/* Styles d'impression */
+@media print {
+  .facture-template-container {
+    padding: 0;
+    margin: 0;
+  }
+
+  .facture-address-card {
+    page-break-inside: avoid;
+  }
+
+  .facture-items-table {
+    page-break-inside: avoid;
+  }
+
+  .facture-total-section {
+    page-break-inside: avoid;
+  }
+
+  .facture-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+  }
+
+  /* Masquer les éléments non nécessaires à l'impression */
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .facture-addresses {
+    flex-direction: column;
+  }
+
+  .facture-address-card {
+    min-width: 100%;
+  }
+
+  .facture-total-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .facture-total-value {
+    margin-left: auto;
+  }
+}

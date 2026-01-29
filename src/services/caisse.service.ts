@@ -1,0 +1,149 @@
+/**
+ * Service API pour la gestion de la caisse
+ */
+
+import { apiService } from './api.service'
+import type { MouvementCaisse, Caisse, RapportGrandesLignes, PointCaisse } from '@types'
+
+const BASE_URL = '/api/caisse'
+
+/**
+ * Créer un approvisionnement
+ */
+export const createAppro = async (data: Partial<MouvementCaisse>): Promise<MouvementCaisse> => {
+  return apiService.post<MouvementCaisse>(`${BASE_URL}/appro`, {
+    ...data,
+    type: 'APPRO',
+  })
+}
+
+/**
+ * Créer un décaissement
+ */
+export const createDecaissement = async (
+  data: Partial<MouvementCaisse>,
+): Promise<MouvementCaisse> => {
+  return apiService.post<MouvementCaisse>(`${BASE_URL}/decaissement`, {
+    ...data,
+    type: 'DECAISSEMENT',
+  })
+}
+
+/**
+ * Créer une entrée de caisse (Chèque/Espèce/Virement)
+ */
+export const createEntreeCaisse = async (
+  data: Partial<MouvementCaisse>,
+): Promise<MouvementCaisse> => {
+  return apiService.post<MouvementCaisse>(`${BASE_URL}/entree`, data)
+}
+
+/**
+ * Récupérer la liste des mouvements de caisse
+ */
+export const getMouvementsCaisse = async (params?: {
+  type?: string
+  date_debut?: string
+  date_fin?: string
+  id_caisse?: number
+}): Promise<MouvementCaisse[]> => {
+  return apiService.get<MouvementCaisse[]>(`${BASE_URL}/mouvements`, { params })
+}
+
+/**
+ * Récupérer un mouvement de caisse par ID
+ */
+export const getMouvementCaisseById = async (id: number): Promise<MouvementCaisse> => {
+  return apiService.get<MouvementCaisse>(`${BASE_URL}/mouvements/${id}`)
+}
+
+/**
+ * Mettre à jour un mouvement de caisse
+ */
+export const updateMouvementCaisse = async (
+  id: number,
+  data: Partial<MouvementCaisse>,
+): Promise<MouvementCaisse> => {
+  return apiService.put<MouvementCaisse>(`${BASE_URL}/mouvements/${id}`, data)
+}
+
+/**
+ * Supprimer un mouvement de caisse
+ */
+export const deleteMouvementCaisse = async (id: number): Promise<void> => {
+  await apiService.delete(`${BASE_URL}/mouvements/${id}`)
+}
+
+/**
+ * Récupérer le rapport "Grandes Lignes"
+ */
+export const getRapportGrandesLignes = async (params: {
+  date_debut: string
+  date_fin: string
+  id_caisse?: number
+}): Promise<RapportGrandesLignes> => {
+  return apiService.get<RapportGrandesLignes>(
+    `${BASE_URL}/rapport-grandes-lignes`,
+    { params },
+  )
+}
+
+/**
+ * Récupérer le solde actuel de la caisse
+ */
+export const getSoldeCaisse = async (id_caisse?: number): Promise<number> => {
+  const response = await apiService.get<{ solde: number }>(`${BASE_URL}/solde`, {
+    params: id_caisse ? { id_caisse } : {},
+  })
+  return response.solde
+}
+
+/**
+ * Récupérer la liste des caisses
+ */
+export const getCaisses = async (): Promise<Caisse[]> => {
+  return apiService.get<Caisse[]>(`${BASE_URL}/caisses`)
+}
+
+/**
+ * Récupérer une caisse par ID
+ */
+export const getCaisseById = async (id: number): Promise<Caisse> => {
+  return apiService.get<Caisse>(`${BASE_URL}/caisses/${id}`)
+}
+
+/**
+ * Valider un numéro de dossier
+ */
+export const validateNumeroDossier = async (numero: string): Promise<{ valid: boolean; message?: string }> => {
+  return apiService.post<{ valid: boolean; message?: string }>(`${BASE_URL}/valider-numero`, {
+    numero,
+  })
+}
+
+/**
+ * Récupérer le point de caisse (entrées, sorties, solde)
+ */
+export const getPointCaisse = async (date?: string): Promise<PointCaisse> => {
+  const url = date ? `${BASE_URL}/point?date=${date}` : `${BASE_URL}/point`
+  return apiService.get<PointCaisse>(url)
+}
+
+/**
+ * Service caisse exporté comme objet (pour compatibilité)
+ */
+export const caisseService = {
+  createAppro,
+  createDecaissement,
+  createEntreeCaisse,
+  getMouvementsCaisse,
+  getMouvementCaisseById,
+  updateMouvementCaisse,
+  deleteMouvementCaisse,
+  getRapportGrandesLignes,
+  getSoldeCaisse,
+  getCaisses,
+  getCaisseById,
+  validateNumeroDossier,
+  getPointCaisse,
+}

@@ -1,0 +1,25 @@
+.statistiques-historiques-page {
+  padding: 24px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.page-header h2 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+  }
+}
