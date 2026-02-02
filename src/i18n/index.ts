@@ -9,12 +9,15 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 import frTranslations from './locales/fr.json'
 import enTranslations from './locales/en.json'
 
-// Configuration des ressources de traduction
+// Configuration des ressources de traduction (mapping automatique des clés de premier niveau comme namespaces)
 const resources = {
   fr: {
+    ...frTranslations,
+    // Compatibilité descendante si certaines clés sont encore dans le namespace par défaut
     translation: frTranslations,
   },
   en: {
+    ...enTranslations,
     translation: enTranslations,
   },
 }
@@ -29,7 +32,7 @@ i18n
   .init({
     resources,
     fallbackLng: 'fr', // Langue par défaut
-    debug: import.meta.env.DEV, // Debug en développement uniquement
+    debug: false, // Désactivé pour la clarté
 
     interpolation: {
       escapeValue: false, // React échappe déjà les valeurs
@@ -37,27 +40,20 @@ i18n
 
     // Options de détection de langue
     detection: {
-      // Ordre et méthodes de détection de la langue
       order: ['localStorage', 'navigator', 'htmlTag'],
-      
-      // Clés de lookup (localStorage, cookie, etc.)
       lookupLocalStorage: 'lbp_language',
-      
-      // Cache de la langue détectée
       caches: ['localStorage'],
-      
-      // Ne pas utiliser de cookie
       cookieMinutes: 0,
     },
 
     // Options de réacteur
     react: {
-      useSuspense: false, // Ne pas utiliser Suspense pour les traductions
+      useSuspense: false,
     },
 
-    // Configuration des namespaces (optionnel pour l'instant)
-    defaultNS: 'translation',
-    ns: ['translation'],
+    // Définir les namespaces disponibles pour éviter le fallback sur 'translation'
+    ns: ['common', 'colis', 'auth', 'navigation', 'caisse', 'errors', 'validation', 'format'],
+    defaultNS: 'common',
   })
 
 export default i18n

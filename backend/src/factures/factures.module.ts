@@ -9,6 +9,6 @@ import { Colis } from '../colis/entities/colis.entity';
   imports: [TypeOrmModule.forFeature([Facture, Colis])],
   providers: [FacturesService],
   controllers: [FacturesController],
-  exports: [FacturesService],
+  exports: [FacturesService, TypeOrmModule],
 })
 export class FacturesModule { }

@@ -4,10 +4,10 @@ import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ConfigProvider } from 'antd'
 import frFR from 'antd/locale/fr_FR'
-import { antdThemeConfig } from './styles/theme'
 import { Toaster } from 'react-hot-toast'
 
 import App from './App'
+import './i18n'
 import { AuthProvider } from './contexts/AuthContext'
 import { PermissionsProvider } from './contexts/PermissionsContext'
 import { ThemeProvider } from './contexts/ThemeContext'
@@ -53,7 +53,7 @@ const AppWrapper = import.meta.env.DEV ? (
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <ConfigProvider locale={frFR} theme={antdThemeConfig}>
+          <ConfigProvider locale={frFR}>
             <AuthProvider>
               <PermissionsProvider>
                 <NotificationsProvider>
@@ -73,7 +73,7 @@ const AppWrapper = import.meta.env.DEV ? (
       <BrowserRouter>
         <QueryClientProvider client={queryClient}>
           <ThemeProvider>
-            <ConfigProvider locale={frFR} theme={antdThemeConfig}>
+            <ConfigProvider locale={frFR}>
               <AuthProvider>
                 <PermissionsProvider>
                   <NotificationsProvider>

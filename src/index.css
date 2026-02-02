@@ -1,54 +1,71 @@
-/* Variables CSS globales */
+/* THÈME ÉLITE LBP - SYSTÈME DE DESIGN PREMIUM */
 :root {
-  /* Couleurs principales */
-  --lbp-primary: #1890ff;
-  --lbp-primary-dark: #096dd9;
-  --lbp-primary-light: #40a9ff;
-  --lbp-secondary: #722ed1;
-  --lbp-success: #52c41a;
-  --lbp-warning: #faad14;
-  --lbp-error: #ff4d4f;
-  --lbp-info: #1890ff;
-  
-  /* Couleurs neutres */
-  --lbp-white: #ffffff;
-  --lbp-black: #000000;
-  --lbp-text-primary: #262626;
-  --lbp-text-secondary: #8c8c8c;
-  --lbp-border-light: #f0f0f0;
-  --lbp-background: #f5f5f5;
-  
-  /* Espacements */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  
-  /* Typographie */
-  --lbp-font-size-xs: 12px;
-  --lbp-font-size-sm: 14px;
-  --lbp-font-size-md: 16px;
-  --lbp-font-size-lg: 18px;
-  --lbp-font-size-xl: 20px;
-  --lbp-font-size-2xl: 24px;
-  --lbp-font-size-3xl: 30px;
-  
-  --lbp-font-weight-normal: 400;
-  --lbp-font-weight-medium: 500;
-  --lbp-font-weight-semibold: 600;
-  --lbp-font-weight-bold: 700;
-  
-  /* Rayons de bordure */
-  --lbp-border-radius-sm: 4px;
-  --lbp-border-radius-md: 8px;
-  --lbp-border-radius-lg: 12px;
-  
-  /* Ombres */
-  --lbp-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --lbp-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.12);
-  --lbp-shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.15);
-  --lbp-shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.18);
+  /* Palette Midnight & Azure */
+  --premium-primary: #0F172A;
+  --premium-accent: #3B82F6;
+  --premium-teal: #2DD4BF;
+  --premium-bg: #F8FAFC;
+  --premium-card: rgba(255, 255, 255, 0.8);
+
+  /* États */
+  --premium-success: #059669;
+  --premium-warning: #D97706;
+  --premium-error: #DC2626;
+
+  /* Texte & Bordures */
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --border-subtle: #E2E8F0;
+
+  /* Ombres Premium */
+  --shadow-elite: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}
+
+/* Reset et Base Typographique */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--premium-bg);
+  color: var(--text-main);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Glassmorphism Utility */
+.glass-effect {
+  background: var(--premium-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.premium-card {
+  background: white;
+  border-radius: 18px;
+  box-shadow: var(--shadow-elite);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.premium-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 25px 30px -5px rgb(0 0 0 / 0.15);
 }
 
 /* Reset et base */
@@ -147,7 +164,7 @@ img[alt=""] {
   html {
     font-size: 14px;
   }
-  
+
   body {
     font-size: var(--lbp-font-size-sm);
   }

@@ -5,7 +5,7 @@
 import { apiService } from './api.service'
 import type { MouvementCaisse, Caisse, RapportGrandesLignes, PointCaisse } from '@types'
 
-const BASE_URL = '/api/caisse'
+const BASE_URL = '/caisse'
 
 /**
  * Créer un approvisionnement

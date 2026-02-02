@@ -20,7 +20,7 @@ export const PermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const loadPermissions = useCallback(async () => {
     try {
       setIsLoading(true)
-      
+
       // Vérifier d'abord le cache localStorage
       const cachedPermissions = localStorage.getItem('lbp_permissions')
       if (cachedPermissions) {
@@ -36,7 +36,7 @@ export const PermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ c
       // Charger depuis l'API
       const userPermissions = await authService.getPermissions()
       setPermissions(userPermissions)
-      
+
       // Mettre à jour le cache
       localStorage.setItem('lbp_permissions', JSON.stringify(userPermissions))
     } catch (error) {
@@ -58,30 +58,48 @@ export const PermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [isAuthenticated, user?.id]) // Utiliser user?.id au lieu de user pour éviter les re-renders
 
   const hasPermission = (permission: string): boolean => {
-    // Super admin a toutes les permissions
-    if (user?.role?.code === 'SUPER_ADMIN') {
-      return true
+    // Debug permissions
+    const role = user?.role;
+    const isSuperAdmin = (role as any) === 'SUPER_ADMIN' || (typeof role === 'object' && (role as any)?.code === 'SUPER_ADMIN') || (role as any) === 'admin' || user?.username === 'admin';
+
+    if (isSuperAdmin || permissions.includes('*')) {
+      return true;
     }
-    
-    // Vérifier la permission spécifique
-    return permissions.includes(permission)
+
+    return permissions.includes(permission);
   }
 
   const hasAnyPermission = (permissionList: string[]): boolean => {
-    if (user?.role?.code === 'SUPER_ADMIN') {
-      return true
+    const role = user?.role;
+    const isSuperAdmin = (role as any) === 'SUPER_ADMIN' || (typeof role === 'object' && (role as any)?.code === 'SUPER_ADMIN') || (role as any) === 'admin';
+
+    if (isSuperAdmin || permissions.includes('*')) {
+      return true;
     }
-    
-    return permissionList.some((p) => permissions.includes(p))
+
+    return permissionList.some((p) => permissions.includes(p));
   }
 
   const hasAllPermissions = (permissionList: string[]): boolean => {
-    if (user?.role?.code === 'SUPER_ADMIN') {
-      return true
+    const role = user?.role;
+    const isSuperAdmin = (role as any) === 'SUPER_ADMIN' || (typeof role === 'object' && (role as any)?.code === 'SUPER_ADMIN') || (role as any) === 'admin';
+
+    if (isSuperAdmin || permissions.includes('*')) {
+      return true;
     }
-    
-    return permissionList.every((p) => permissions.includes(p))
+
+    return permissionList.every((p) => permissions.includes(p));
   }
+
+  // Debug log on change
+  useEffect(() => {
+    if (user) {
+      console.log('[Permissions] Current User Role:', user.role);
+      console.log('[Permissions] Current Permissions:', permissions);
+      const isSA = (user.role as any) === 'SUPER_ADMIN' || (user.role as any) === 'admin';
+      console.log('[Permissions] Is SUPER_ADMIN?', isSA);
+    }
+  }, [user, permissions]);
 
   const value: PermissionsContextType = {
     permissions,

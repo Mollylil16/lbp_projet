@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Card, Typography, Spin } from 'antd'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts'
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
 import { ChartColisParMoisModal } from './ChartColisParMoisModal'
 import './ChartColisParMois.css'
 
@@ -57,15 +57,15 @@ export const ChartColisParMois: React.FC<ChartColisParMoisProps> = ({ data, load
 
   return (
     <>
-      <Card 
-        className="modern-chart-card" 
+      <Card
+        className="modern-chart-card"
         style={{ cursor: 'pointer' }}
         onClick={handleChartClick}
         hoverable
       >
         <div className="chart-header">
           <Title level={4} className="chart-title">
-            Évolution des Colis par Mois
+            Évolution des Colis
           </Title>
           <div className="chart-legend-inline">
             <div className="legend-item">
@@ -74,82 +74,69 @@ export const ChartColisParMois: React.FC<ChartColisParMoisProps> = ({ data, load
             </div>
             <div className="legend-item">
               <span className="legend-dot autres" />
-              <span>Autres Envois</span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-dot total" />
-              <span>Total</span>
+              <span>Autres</span>
             </div>
           </div>
         </div>
-        
+
         {loading ? (
           <div className="chart-loading">
             <Spin size="large" />
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={320}>
-            <AreaChart 
-              data={data} 
+            <AreaChart
+              data={data}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
               onClick={handleChartClick}
             >
               <defs>
                 <linearGradient id="colorGroupage" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#667eea" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#667eea" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--premium-accent)" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="var(--premium-accent)" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorAutres" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--premium-teal)" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="var(--premium-teal)" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--premium-warning)" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="var(--premium-warning)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
-              <XAxis 
-                dataKey="mois" 
-                stroke="#9ca3af"
-                style={{ fontSize: 12, fontWeight: 500 }}
-                tick={{ fill: '#6b7280' }}
+              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+              <XAxis
+                dataKey="mois"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: '#94A3B8', fontSize: 12, fontWeight: 500 }}
+                dy={10}
               />
-              <YAxis 
-                stroke="#9ca3af"
-                style={{ fontSize: 12, fontWeight: 500 }}
-                tick={{ fill: '#6b7280' }}
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: '#94A3B8', fontSize: 12, fontWeight: 500 }}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#E2E8F0', strokeWidth: 2 }} />
               <Area
                 type="monotone"
                 dataKey="groupage"
-                stroke="#667eea"
+                stroke="var(--premium-accent)"
                 strokeWidth={3}
                 fill="url(#colorGroupage)"
                 name="Groupage"
-                dot={{ fill: '#667eea', strokeWidth: 2, r: 4, cursor: 'pointer' }}
-                activeDot={{ r: 8, cursor: 'pointer' }}
+                dot={false}
+                activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--premium-accent)' }}
               />
               <Area
                 type="monotone"
                 dataKey="autresEnvois"
-                stroke="#10b981"
+                stroke="var(--premium-teal)"
                 strokeWidth={3}
                 fill="url(#colorAutres)"
-                name="Autres Envois"
-                dot={{ fill: '#10b981', strokeWidth: 2, r: 4, cursor: 'pointer' }}
-                activeDot={{ r: 8, cursor: 'pointer' }}
-              />
-              <Area
-                type="monotone"
-                dataKey="total"
-                stroke="#f59e0b"
-                strokeWidth={3}
-                fill="url(#colorTotal)"
-                name="Total"
-                dot={{ fill: '#f59e0b', strokeWidth: 2, r: 4, cursor: 'pointer' }}
-                activeDot={{ r: 8, cursor: 'pointer' }}
+                name="Autres"
+                dot={false}
+                activeDot={{ r: 6, strokeWidth: 0, fill: 'var(--premium-teal)' }}
               />
             </AreaChart>
           </ResponsiveContainer>

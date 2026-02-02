@@ -31,6 +31,7 @@ import {
   formatMontantWithDevise,
   formatRefColis,
 } from "@utils/format";
+import './ColisList.css';
 import {
   useColisList,
   useDeleteColis,
@@ -141,9 +142,8 @@ export const ColisList: React.FC<ColisListProps> = ({
       };
 
       exportTableToPDF(exportData, `colis_${formeEnvoi}`, {
-        title: `${t("title")} - ${
-          formeEnvoi === "groupage" ? t("groupage") : t("autresEnvois")
-        }`,
+        title: `${t("title")} - ${formeEnvoi === "groupage" ? t("groupage") : t("autresEnvois")
+          }`,
       });
       message.success(t("exportPdf"));
     } catch (error) {
@@ -186,9 +186,8 @@ export const ColisList: React.FC<ColisListProps> = ({
       };
 
       await exportTableToExcel(exportData, `colis_${formeEnvoi}`, {
-        title: `${t("title")} - ${
-          formeEnvoi === "groupage" ? t("groupage") : t("autresEnvois")
-        }`,
+        title: `${t("title")} - ${formeEnvoi === "groupage" ? t("groupage") : t("autresEnvois")
+          }`,
       });
       message.success(t("exportExcel"));
     } catch (error) {
@@ -212,7 +211,7 @@ export const ColisList: React.FC<ColisListProps> = ({
       fixed: "left",
       width: 150,
       render: (text: string) => (
-        <Tag color="blue" style={{ fontWeight: "bold" }}>
+        <Tag color="blue" className="ref-tag">
           {formatRefColis(text)}
         </Tag>
       ),
@@ -339,12 +338,12 @@ export const ColisList: React.FC<ColisListProps> = ({
   return (
     <div>
       {/* BARRE DE FILTRES ET RECHERCHE */}
-      <Card style={{ marginBottom: 16 }}>
-        <Row gutter={16} align="middle">
+      <Card className="filter-card" style={{ marginBottom: 24 }}>
+        <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} md={8}>
             <Input
               placeholder={t("searchPlaceholder")}
-              prefix={<SearchOutlined />}
+              prefix={<SearchOutlined style={{ color: 'var(--premium-accent)' }} />}
               allowClear
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
@@ -385,33 +384,22 @@ export const ColisList: React.FC<ColisListProps> = ({
             />
           </Col>
 
-          <Col xs={24} sm={12} md={10}>
-            <Space wrap>
+          <Col xs={24} sm={24} md={4}>
+            <Space wrap style={{ width: '100%', justifyContent: 'flex-end' }}>
               <Button
                 icon={<ReloadOutlined />}
                 onClick={() => refetch()}
                 size="large"
-              >
-                {tCommon("refresh")}
-              </Button>
+                className="premium-action-btn"
+              />
 
               <Button
                 icon={<FilePdfOutlined />}
                 onClick={handleExportPDF}
                 loading={exporting}
                 size="large"
-              >
-                PDF
-              </Button>
-
-              <Button
-                icon={<FileExcelOutlined />}
-                onClick={handleExportExcel}
-                loading={exporting}
-                size="large"
-              >
-                Excel
-              </Button>
+                className="premium-action-btn"
+              />
 
               {hasPermission(colisPermissions.CREATE) && onCreate && (
                 <Button
@@ -419,6 +407,8 @@ export const ColisList: React.FC<ColisListProps> = ({
                   icon={<PlusOutlined />}
                   onClick={onCreate}
                   size="large"
+                  className="premium-action-btn"
+                  style={{ background: 'var(--premium-accent)', borderColor: 'var(--premium-accent)' }}
                 >
                   {t("newColis")}
                 </Button>
@@ -429,7 +419,7 @@ export const ColisList: React.FC<ColisListProps> = ({
       </Card>
 
       {/* TABLEAU */}
-      <Card>
+      <div className="premium-table-wrapper">
         {isLoading ? (
           <TableSkeleton rows={5} columns={8} />
         ) : !data?.data || data.data.length === 0 ? (
@@ -455,6 +445,7 @@ export const ColisList: React.FC<ColisListProps> = ({
             columns={columns}
             dataSource={data.data}
             rowKey="id"
+            className="premium-table"
             scroll={{ x: 1200 }}
             pagination={{
               current: pagination.page,
@@ -467,7 +458,7 @@ export const ColisList: React.FC<ColisListProps> = ({
             onChange={handleTableChange}
           />
         )}
-      </Card>
+      </div>
     </div>
   );
 };

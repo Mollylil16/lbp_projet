@@ -22,7 +22,9 @@ export const LazyPageLoader: React.FC<LazyPageLoaderProps> = ({
 }) => {
   const defaultFallback = (
     <div className="lazy-page-loader">
-      <Spin size="large" tip="Chargement..." />
+      <Spin size="large" tip="Chargement...">
+        <div style={{ padding: 50 }} />
+      </Spin>
     </div>
   )
 

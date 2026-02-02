@@ -15,6 +15,7 @@ import {
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { usePermissions } from "@contexts/PermissionsContext";
+import { useAuth } from "@contexts/AuthContext";
 import "./SidebarMenu.css";
 
 interface SidebarMenuProps {
@@ -24,10 +25,24 @@ interface SidebarMenuProps {
 export const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { hasPermission } = usePermissions();
+  const { user } = useAuth();
+  const { hasPermission, permissions, isLoading: isPermsLoading } = usePermissions();
+
+  // Debugging
+  React.useEffect(() => {
+    const isAdmin = user?.username === 'admin' || (user?.role as any) === 'SUPER_ADMIN';
+    console.log('[Sidebar] Debug Info:', {
+      username: user?.username,
+      role: user?.role,
+      permissions,
+      isPermsLoading,
+      isAdminBypass: isAdmin,
+      canSeeClients: hasPermission("clients.read")
+    });
+  }, [user, permissions, isPermsLoading, hasPermission]);
 
   // Construction du menu selon les permissions
-  const menuItems: MenuProps["items"] = [
+  const menuItems: any[] = [
     {
       key: "/dashboard",
       icon: <DashboardOutlined />,
@@ -40,99 +55,99 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed }) => {
       children: [
         ...(hasPermission("colis.groupage.read")
           ? [
-              {
-                key: "/colis/groupage",
-                icon: <FolderOutlined />,
-                label: "Groupage",
-              },
-            ]
+            {
+              key: "/colis/groupage",
+              icon: <FolderOutlined />,
+              label: "Groupage",
+            },
+          ]
           : []),
         ...(hasPermission("colis.autres-envois.read")
           ? [
-              {
-                key: "/colis/autres-envois",
-                icon: <InboxOutlined />,
-                label: "Autres Envois",
-              },
-            ]
+            {
+              key: "/colis/autres-envois",
+              icon: <InboxOutlined />,
+              label: "Autres Envois",
+            },
+          ]
           : []),
         ...(hasPermission("rapports.view")
           ? [
-              {
-                key: "/colis/rapports",
-                icon: <BarChartOutlined />,
-                label: "Rapports",
-              },
-            ]
+            {
+              key: "/colis/rapports",
+              icon: <BarChartOutlined />,
+              label: "Rapports",
+            },
+          ]
           : []),
       ],
     },
     ...(hasPermission("clients.read")
       ? [
-          {
-            key: "/clients",
-            icon: <TeamOutlined />,
-            label: "Clients Expéditeurs",
-          },
-        ]
+        {
+          key: "/clients",
+          icon: <TeamOutlined />,
+          label: "Clients Expéditeurs",
+        },
+      ]
       : []),
     ...(hasPermission("factures.read")
       ? [
-          {
-            key: "/factures",
-            icon: <FileTextOutlined />,
-            label: "Factures",
-          },
-        ]
+        {
+          key: "/factures",
+          icon: <FileTextOutlined />,
+          label: "Factures",
+        },
+      ]
       : []),
     ...(hasPermission("paiements.read")
       ? [
-          {
-            key: "/paiements",
-            icon: <DollarOutlined />,
-            label: "Paiements",
-          },
-        ]
+        {
+          key: "/paiements",
+          icon: <DollarOutlined />,
+          label: "Paiements",
+        },
+      ]
       : []),
     ...(hasPermission("caisse.view")
       ? [
-          {
-            key: "/caisse/suivi",
-            icon: <WalletOutlined />,
-            label: "Suivi Caisse",
-          },
-        ]
+        {
+          key: "/caisse/suivi",
+          icon: <WalletOutlined />,
+          label: "Suivi Caisse",
+        },
+      ]
       : []),
     ...(hasPermission("rapports.view")
       ? [
-          {
-            key: "/statistiques/historiques",
-            icon: <LineChartOutlined />,
-            label: "Statistiques Historiques",
-          },
-        ]
+        {
+          key: "/statistiques/historiques",
+          icon: <LineChartOutlined />,
+          label: "Statistiques Historiques",
+        },
+      ]
       : []),
     ...(hasPermission("config.view")
       ? [
-          {
-            key: "/settings",
-            icon: <SettingOutlined />,
-            label: "Paramètres",
-          },
-        ]
+        {
+          key: "/settings",
+          icon: <SettingOutlined />,
+          label: "Paramètres",
+        },
+      ]
       : []),
     ...(hasPermission("users.read")
       ? [
-          {
-            key: "/users",
-            icon: <TeamOutlined />,
-            label: "Gestion Utilisateurs",
-          },
-        ]
+        {
+          key: "/users",
+          icon: <TeamOutlined />,
+          label: "Gestion Utilisateurs",
+        },
+      ]
       : []),
   ];
 
-  const handleMenuClick: MenuProps["onClick"] = ({ key }) => {
+  const handleMenuClick: any = ({ key }: any) => {
     if (key && !key.startsWith("colis")) {
       navigate(key as string);
     }

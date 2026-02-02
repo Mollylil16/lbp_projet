@@ -1,128 +1,160 @@
-.modern-sidebar-menu {
-  border: none;
-  background: transparent;
-  padding: 12px 8px;
-}
+/* ========================================
+   SIDEBAR PROFESSIONNELLE - Style ERP
+   ======================================== */
 
-.modern-sidebar-menu .ant-menu-item {
-  height: 48px;
-  line-height: 48px;
-  margin: 4px 0;
-  border-radius: 12px;
-  padding-left: 16px !important;
-  font-size: 14px;
-  font-weight: 500;
-  color: #6b7280;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.modern-sidebar-menu .ant-menu-item::before {
-  content: '';
-  position: absolute;
+.modern-sidebar {
+  position: fixed;
   left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 0 3px 3px 0;
-  transition: height 0.2s;
+  top: 0;
+  bottom: 0;
+  width: 240px;
+  height: 100vh;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border-color);
+  overflow-y: auto;
+  z-index: 100;
+  transition: all 0.2s ease;
 }
 
-.modern-sidebar-menu .ant-menu-item:hover {
-  background: rgba(102, 126, 234, 0.08);
-  color: #667eea;
-  transform: translateX(4px);
+.modern-sidebar::-webkit-scrollbar {
+  width: 4px;
 }
 
-.modern-sidebar-menu .ant-menu-item:hover::before {
-  height: 24px;
+.modern-sidebar::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 2px;
+}
+
+/* LOGO */
+.sidebar-logo {
+  height: 64px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-card);
+}
+
+.logo-icon-container {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.logo-title {
+  font-size: 14px;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.logo-subtitle {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* MENU ITEMS */
+.modern-sidebar-menu {
+  background: transparent !important;
+  border-right: none !important;
+  padding: 8px !important;
+}
+
+.modern-sidebar-menu .ant-menu-item,
+.modern-sidebar-menu .ant-menu-submenu-title {
+  height: 40px !important;
+  line-height: 40px !important;
+  margin: 2px 0 !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 0 12px !important;
+  color: var(--text-primary) !important;
+  font-size: var(--font-size-base) !important;
+  font-weight: var(--font-weight-normal) !important;
+  transition: all 0.15s ease !important;
+}
+
+.modern-sidebar-menu .ant-menu-item:hover,
+.modern-sidebar-menu .ant-menu-submenu-title:hover {
+  background: var(--bg-hover) !important;
+  color: var(--primary) !important;
 }
 
 .modern-sidebar-menu .ant-menu-item-selected {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.12) 0%, rgba(118, 75, 162, 0.12) 100%);
-  color: #667eea;
-  font-weight: 600;
+  background: rgba(25, 118, 210, 0.08) !important;
+  color: var(--primary) !important;
+  font-weight: var(--font-weight-medium) !important;
+  border-left: 3px solid var(--primary) !important;
+  padding-left: 9px !important;
 }
 
-.modern-sidebar-menu .ant-menu-item-selected::before {
-  height: 32px;
+.modern-sidebar-menu .ant-menu-item-selected .anticon {
+  color: var(--primary) !important;
 }
 
-.modern-sidebar-menu .ant-menu-item-icon {
-  font-size: 18px;
-  margin-right: 12px;
-  transition: transform 0.2s;
+.modern-sidebar-menu .anticon {
+  font-size: 16px !important;
+  color: var(--text-secondary) !important;
+  transition: color 0.15s ease !important;
 }
 
-.modern-sidebar-menu .ant-menu-item:hover .ant-menu-item-icon {
-  transform: scale(1.1);
+.modern-sidebar-menu .ant-menu-item:hover .anticon,
+.modern-sidebar-menu .ant-menu-submenu-title:hover .anticon {
+  color: var(--primary) !important;
 }
 
-.modern-sidebar-menu .ant-menu-submenu {
-  margin: 4px 0;
+/* SUBMENU */
+.modern-sidebar-menu .ant-menu-sub {
+  background: transparent !important;
+  padding-left: 12px !important;
 }
 
-.modern-sidebar-menu .ant-menu-submenu-title {
-  height: 48px;
-  line-height: 48px;
-  border-radius: 12px;
-  padding-left: 16px !important;
-  font-size: 14px;
-  font-weight: 500;
-  color: #6b7280;
-  transition: all 0.2s;
-  margin: 0;
+.modern-sidebar-menu .ant-menu-submenu-open .ant-menu-submenu-title {
+  color: var(--primary) !important;
+  background: transparent !important;
 }
 
-.modern-sidebar-menu .ant-menu-submenu-title:hover {
-  background: rgba(102, 126, 234, 0.08);
-  color: #667eea;
-}
-
-.modern-sidebar-menu .ant-menu-submenu-open > .ant-menu-submenu-title {
-  color: #667eea;
-  font-weight: 600;
-}
-
-.modern-sidebar-menu .ant-menu-submenu .ant-menu {
-  background: rgba(102, 126, 234, 0.03);
-  border-radius: 12px;
-  margin: 8px 0;
-  padding: 4px 0;
-}
-
-.modern-sidebar-menu .ant-menu-submenu .ant-menu-item {
-  padding-left: 48px !important;
-  margin: 2px 8px;
-  height: 40px;
-  line-height: 40px;
-}
-
-.modern-sidebar-menu .ant-menu-submenu .ant-menu-item-selected {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
-}
-
-/* Animation pour les items */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-10px);
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .modern-sidebar {
+    transform: translateX(-100%);
   }
-  to {
-    opacity: 1;
+
+  .modern-sidebar.mobile-open {
     transform: translateX(0);
   }
 }
 
-.modern-sidebar-menu .ant-menu-item {
-  animation: slideIn 0.3s ease-out;
+/* OVERLAY MOBILE */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
 }
 
-.modern-sidebar-menu .ant-menu-item:nth-child(1) { animation-delay: 0.05s; }
-.modern-sidebar-menu .ant-menu-item:nth-child(2) { animation-delay: 0.1s; }
-.modern-sidebar-menu .ant-menu-item:nth-child(3) { animation-delay: 0.15s; }
-.modern-sidebar-menu .ant-menu-item:nth-child(4) { animation-delay: 0.2s; }
-.modern-sidebar-menu .ant-menu-item:nth-child(5) { animation-delay: 0.25s; }
+.sidebar-overlay.active {
+  display: block;
+}

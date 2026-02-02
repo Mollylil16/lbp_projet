@@ -1,6 +1,7 @@
 import React from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '@contexts/AuthContext'
+import { usePermissions } from '@contexts/PermissionsContext'
 import { Spin } from 'antd'
 
 interface ProtectedRouteProps {
@@ -14,9 +15,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredPermission,
   requireAll = false,
 }) => {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth()
+  const { isLoading: isPermsLoading } = usePermissions()
 
-  // Afficher un loader pendant la vérification de l'authentification
+  const isLoading = isAuthLoading || isPermsLoading
+
+  // Afficher un loader pendant la vérification de l'authentification et des permissions
   if (isLoading) {
     return (
       <div style={{
@@ -25,7 +29,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         alignItems: 'center',
         height: '100vh',
       }}>
-        <Spin size="large" tip="Chargement..." />
+        <Spin size="large" tip="Chargement...">
+          <div style={{ padding: 50 }} />
+        </Spin>
       </div>
     )
   }

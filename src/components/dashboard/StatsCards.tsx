@@ -15,6 +15,8 @@ import { WithPermission } from "@components/common/WithPermission";
 import { PERMISSIONS } from "@constants/permissions";
 import "./StatsCards.css";
 
+import { useNavigate } from "react-router-dom";
+
 interface StatsCardsProps {
   stats: DashboardStats;
   loading?: boolean;
@@ -26,6 +28,7 @@ interface StatCardProps {
   icon: React.ReactNode;
   gradient: string;
   iconBg: string;
+  onClick?: () => void;
   trend?: {
     value: number;
     isPositive: boolean;
@@ -39,6 +42,7 @@ const StatCard: React.FC<StatCardProps> = ({
   icon,
   gradient,
   iconBg,
+  onClick,
   trend,
   loading = false,
 }) => {
@@ -57,19 +61,22 @@ const StatCard: React.FC<StatCardProps> = ({
   }
 
   return (
-    <div className="stat-card">
-      <div className="stat-card-content" style={{ background: gradient }}>
-        <div className="stat-icon-wrapper" style={{ background: iconBg }}>
+    <div
+      className={`stat-card ${onClick ? 'clickable' : ''}`}
+      onClick={onClick}
+      style={{ cursor: onClick ? 'pointer' : 'default' }}
+    >
+      <div className="stat-card-content">
+        <div className={`stat-icon-wrapper ${iconBg}`}>
           {icon}
         </div>
         <div className="stat-info">
-          <div className="stat-value">{value}</div>
           <div className="stat-title">{title}</div>
+          <div className="stat-value">{value}</div>
           {trend && (
             <div
-              className={`stat-trend ${
-                trend.isPositive ? "positive" : "negative"
-              }`}
+              className={`stat-trend ${trend.isPositive ? "positive" : "negative"
+                }`}
             >
               <RiseOutlined className="trend-icon" />
               <span>{Math.abs(trend.value)}%</span>
@@ -85,64 +92,71 @@ export const StatsCards: React.FC<StatsCardsProps> = ({
   stats,
   loading = false,
 }) => {
+  const navigate = useNavigate();
+
   return (
     <div className="stats-cards-container">
-      <Row gutter={[20, 20]}>
+      <Row gutter={[24, 24]}>
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Colis créés aujourd'hui"
+            title="Colis aujourd'hui"
             value={stats.colis_aujourdhui}
             icon={<InboxOutlined />}
-            gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-            iconBg="rgba(102, 126, 234, 0.2)"
+            gradient=""
+            iconBg="primary"
             loading={loading}
+            onClick={() => navigate('/colis/groupage')}
           />
         </Col>
 
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Colis en transit"
+            title="En Transit"
             value={stats.colis_en_transit}
             icon={<ClockCircleOutlined />}
-            gradient="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
-            iconBg="rgba(245, 158, 11, 0.2)"
+            gradient=""
+            iconBg="warning"
             loading={loading}
+            onClick={() => navigate('/colis/autres-envois')}
           />
         </Col>
 
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Colis livrés"
+            title="Colis Livrés"
             value={stats.colis_livres}
             icon={<CheckCircleOutlined />}
-            gradient="linear-gradient(135deg, #10b981 0%, #059669 100%)"
-            iconBg="rgba(16, 185, 129, 0.2)"
+            gradient=""
+            iconBg="success"
             loading={loading}
+            onClick={() => navigate('/colis/groupage')}
           />
         </Col>
 
         <Col xs={24} sm={12} lg={6}>
           <StatCard
-            title="Clients actifs"
+            title="Clients Actifs"
             value={stats.clients_actifs}
             icon={<TeamOutlined />}
-            gradient="linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)"
-            iconBg="rgba(139, 92, 246, 0.2)"
+            gradient=""
+            iconBg="info"
             loading={loading}
+            onClick={() => navigate('/clients')}
           />
         </Col>
       </Row>
 
       <WithPermission permission={PERMISSIONS.DASHBOARD.ADMIN}>
-        <Row gutter={[20, 20]} style={{ marginTop: 20 }}>
+        <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
           <Col xs={24} sm={12} lg={6}>
             <StatCard
               title="Revenus du jour"
               value={formatMontantWithDevise(stats.revenus_jour)}
               icon={<DollarOutlined />}
-              gradient="linear-gradient(135deg, #10b981 0%, #059669 100%)"
-              iconBg="rgba(16, 185, 129, 0.2)"
+              gradient=""
+              iconBg="success"
               loading={loading}
+              onClick={() => navigate('/factures')}
             />
           </Col>
 
@@ -151,31 +165,34 @@ export const StatsCards: React.FC<StatsCardsProps> = ({
               title="Revenus du mois"
               value={formatMontantWithDevise(stats.revenus_mois)}
               icon={<RiseOutlined />}
-              gradient="linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)"
-              iconBg="rgba(59, 130, 246, 0.2)"
+              gradient=""
+              iconBg="primary"
               loading={loading}
+              onClick={() => navigate('/factures')}
             />
           </Col>
 
           <Col xs={24} sm={12} lg={6}>
             <StatCard
-              title="Factures à valider"
+              title="À Valider"
               value={stats.factures_a_valider}
               icon={<FileTextOutlined />}
-              gradient="linear-gradient(135deg, #f59e0b 0%, #d97706 100%)"
-              iconBg="rgba(245, 158, 11, 0.2)"
+              gradient=""
+              iconBg="warning"
               loading={loading}
+              onClick={() => navigate('/factures')}
             />
           </Col>
 
           <Col xs={24} sm={12} lg={6}>
             <StatCard
-              title="Paiements en attente"
+              title="En attente"
               value={stats.paiements_attente}
               icon={<DollarOutlined />}
-              gradient="linear-gradient(135deg, #ef4444 0%, #dc2626 100%)"
-              iconBg="rgba(239, 68, 68, 0.2)"
+              gradient=""
+              iconBg="warning"
               loading={loading}
+              onClick={() => navigate('/paiements')}
             />
           </Col>
         </Row>

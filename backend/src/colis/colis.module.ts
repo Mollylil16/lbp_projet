@@ -13,6 +13,6 @@ import { FacturesModule } from '../factures/factures.module';
   ],
   providers: [ColisService],
   controllers: [ColisController],
-  exports: [ColisService],
+  exports: [ColisService, TypeOrmModule],
 })
 export class ColisModule { }

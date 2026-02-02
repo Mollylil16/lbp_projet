@@ -9,6 +9,6 @@ import { Facture } from '../factures/entities/facture.entity';
   imports: [TypeOrmModule.forFeature([Paiement, Facture])],
   providers: [PaiementsService],
   controllers: [PaiementsController],
-  exports: [PaiementsService],
+  exports: [PaiementsService, TypeOrmModule],
 })
 export class PaiementsModule { }

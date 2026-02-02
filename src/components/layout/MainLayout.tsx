@@ -28,7 +28,7 @@ export const MainLayout: React.FC = () => {
   const { isMobile, isMenuOpen, closeMenu, toggleMenu } = useMobileMenu()
   useServiceWorker() // Enregistrer le service worker
 
-  const userMenuItems: MenuProps['items'] = [
+  const userMenuItems: any[] = [
     {
       key: 'profile',
       icon: <UserOutlined />,
@@ -77,9 +77,9 @@ export const MainLayout: React.FC = () => {
       >
         <div className="sidebar-logo">
           <div className="logo-icon-container">
-            <img 
-              src="/logo_lbp.png" 
-              alt="Logo La Belle Porte" 
+            <img
+              src="/logo_lbp.png"
+              alt="Logo La Belle Porte"
               className="sidebar-logo-img"
             />
           </div>
@@ -111,25 +111,27 @@ export const MainLayout: React.FC = () => {
 
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
               <div className="user-menu-trigger">
-                <Avatar 
-                  size={40} 
+                <Avatar
+                  size={42}
                   icon={<UserOutlined />}
                   className="user-avatar"
-                  style={{ 
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  style={{
+                    background: 'linear-gradient(135deg, #3B82F6 0%, #2DD4BF 100%)',
                     cursor: 'pointer'
                   }}
                 />
                 <div className="user-info">
-                  <span className="user-name">{user?.full_name}</span>
-                  <span className="user-role">{user?.role?.name}</span>
+                  <span className="user-name">{user?.username}</span>
+                  <span className="user-role">
+                    {typeof user?.role === 'string' ? user.role : user?.role?.name || 'Utilisateur'}
+                  </span>
                 </div>
               </div>
             </Dropdown>
           </Space>
         </Header>
 
-        <Content 
+        <Content
           id="main-content"
           className="modern-content"
           tabIndex={-1}

@@ -1,55 +1,79 @@
+/* ========================================
+   EMPTY STATE - Style Professionnel
+   ======================================== */
+
 .empty-state-container {
-  padding: 48px 24px;
+  padding: 80px 40px;
   text-align: center;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  margin: 20px 0;
+  border: 1px dashed var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.empty-state-container:hover {
+  border-color: var(--primary-light);
+  background: var(--bg-hover);
 }
 
 .empty-state-content {
+  margin-top: 16px;
   max-width: 400px;
-  margin: 0 auto;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .empty-state-title {
-  margin-bottom: 12px !important;
-  color: #6b7280;
+  margin-bottom: 8px !important;
+  color: var(--text-primary) !important;
+  font-weight: var(--font-weight-semibold) !important;
 }
 
 .empty-state-description {
   display: block;
-  margin-top: 8px;
-  font-size: 14px;
+  margin-bottom: 24px !important;
+  color: var(--text-secondary) !important;
+  font-size: var(--font-size-base);
   line-height: 1.6;
 }
 
 .empty-state-actions {
   display: flex;
-  gap: 12px;
   justify-content: center;
-  margin-top: 24px;
-  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
 }
 
+.empty-state-actions .ant-btn {
+  height: 44px;
+  padding: 0 24px;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-medium);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* IMAGE CUSTOMIZATION */
+.empty-state-container .ant-empty-image {
+  opacity: 0.8;
+  filter: grayscale(0.2);
+  transition: all 0.3s ease;
+}
+
+.empty-state-container:hover .ant-empty-image {
+  opacity: 1;
+  filter: grayscale(0);
+  transform: translateY(-5px);
+}
+
+/* ERROR STATE MODIFIER */
 .empty-error-state {
-  background: #fef2f2;
-  border-radius: 12px;
-  border: 1px solid #fee2e2;
+  border-color: rgba(211, 47, 47, 0.2);
 }
 
-.empty-error-state .empty-state-title {
-  color: #dc2626;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .empty-state-container {
-    padding: 32px 16px;
-  }
-
-  .empty-state-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .empty-state-actions button {
-    width: 100%;
-  }
+.empty-error-state:hover {
+  border-color: var(--error);
+  background: rgba(211, 47, 47, 0.02);
 }

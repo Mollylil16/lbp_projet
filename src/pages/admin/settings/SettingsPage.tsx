@@ -30,13 +30,13 @@ export const SettingsPage: React.FC = () => {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
 
-  const uploadProps: UploadProps = {
+  const uploadProps: any = {
     name: 'logo',
-    action: '/api/upload/logo',
+    action: '/upload/logo',
     headers: {
       authorization: 'authorization-text',
     },
-    onChange(info) {
+    onChange(info: any) {
       if (info.file.status === 'done') {
         message.success(`${info.file.name} téléchargé avec succès`)
       } else if (info.file.status === 'error') {

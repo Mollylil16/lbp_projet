@@ -45,15 +45,15 @@ const getActivityIcon = (type: string) => {
 const getActivityColor = (type: string) => {
   switch (type) {
     case 'colis':
-      return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      return 'var(--premium-accent)';
     case 'facture':
-      return 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+      return 'var(--premium-warning)';
     case 'paiement':
-      return 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+      return 'var(--premium-success)';
     case 'client':
-      return 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
+      return 'var(--premium-accent)';
     default:
-      return 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)'
+      return 'var(--text-muted)';
   }
 }
 
@@ -83,7 +83,7 @@ export const RecentActivities: React.FC<RecentActivitiesProps> = ({ activities, 
       <div className="chart-header">
         <Title level={4} className="chart-title">Activités Récentes</Title>
       </div>
-      
+
       <div className="activities-timeline">
         <Timeline
           items={activities.map((activity) => ({

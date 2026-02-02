@@ -14,22 +14,24 @@ export const Loading: React.FC<LoadingProps> = ({
 }) => {
   const style: React.CSSProperties = fullScreen
     ? {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        width: '100%',
-      }
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+      width: '100%',
+    }
     : {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: '40px',
-      }
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: '40px',
+    }
 
   return (
     <div style={style}>
-      <Spin size={size} tip={tip} />
+      <Spin size={size} tip={tip}>
+        <div style={{ padding: size === 'large' ? 40 : 20 }} />
+      </Spin>
     </div>
   )
 }
