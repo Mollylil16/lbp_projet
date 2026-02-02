@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Request, Get } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, Get, UnauthorizedException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -16,7 +16,7 @@ export class AuthController {
     async login(@Body() loginDto: LoginDto) {
         const user = await this.authService.validateUser(loginDto.username, loginDto.password);
         if (!user) {
-            return { status: 'error', message: 'Nom d\'utilisateur ou mot de passe incorrect' };
+            throw new UnauthorizedException('Nom d\'utilisateur ou mot de passe incorrect');
         }
         return this.authService.login(user);
     }

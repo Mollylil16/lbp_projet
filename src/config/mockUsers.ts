@@ -169,7 +169,7 @@ export const MOCK_USERS: Record<string, User> = {
  * Format: username => password
  */
 export const MOCK_PASSWORDS: Record<string, string> = {
-  admin: 'admin123',
+  admin: 'adminpassword', // Corrigé pour correspondre au backend
   manager: 'manager123',
   operateur: 'operateur123',
   validateur: 'validateur123',

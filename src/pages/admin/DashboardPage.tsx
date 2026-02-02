@@ -12,33 +12,39 @@ import { WithPermission } from '@components/common/WithPermission'
 import { PERMISSIONS } from '@constants/permissions'
 import { APP_CONFIG } from '@constants/application'
 import { useAlerts } from '@services/alerts.service'
+import { useAuth } from '@contexts/AuthContext'
 import './DashboardPage.css'
 
 const { Title } = Typography
 
 export const DashboardPage: React.FC = () => {
+  const { isAuthenticated } = useAuth()
+  
   // Activer les alertes automatiques
   useAlerts();
 
-  // Récupérer les statistiques
+  // Récupérer les statistiques (seulement si authentifié)
   const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
     queryKey: ['dashboard', 'stats'],
     queryFn: () => dashboardService.getStats(),
     refetchInterval: APP_CONFIG.refresh.dashboard,
+    enabled: isAuthenticated, // Ne faire la requête que si authentifié
   })
 
-  // Récupérer le point caisse
+  // Récupérer le point caisse (seulement si authentifié)
   const { data: pointCaisse, isLoading: caisseLoading, refetch: refetchCaisse } = useQuery({
     queryKey: ['dashboard', 'caisse'],
     queryFn: () => dashboardService.getPointCaisse(),
     refetchInterval: APP_CONFIG.refresh.widgets,
+    enabled: isAuthenticated, // Ne faire la requête que si authentifié
   })
 
-  // Récupérer les activités récentes
+  // Récupérer les activités récentes (seulement si authentifié)
   const { data: activities, isLoading: activitiesLoading, refetch: refetchActivities } = useQuery({
     queryKey: ['dashboard', 'activities'],
     queryFn: () => dashboardService.getRecentActivities(10),
     refetchInterval: APP_CONFIG.refresh.widgets,
+    enabled: isAuthenticated, // Ne faire la requête que si authentifié
   })
 
   // Données de graphiques (à remplacer par des appels API réels)

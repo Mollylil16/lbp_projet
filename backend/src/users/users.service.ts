@@ -48,19 +48,82 @@ export class UsersService implements OnApplicationBootstrap {
         return this.usersRepository.findOne({ where: { id } });
     }
 
-    // Méthode pour l'initialisation (Seed) d'un admin par défaut
+    // Méthode pour l'initialisation (Seed) de tous les utilisateurs de test
     async createDefaultAdmin() {
-        const admin = await this.findByUsername('admin');
-        if (!admin) {
-            await this.create({
+        // Liste de tous les utilisateurs de test à créer
+        const testUsers = [
+            {
                 username: 'admin',
-                password: 'adminpassword', // À changer immédiatement
+                password: 'adminpassword',
                 fullname: 'Administrateur Système',
                 role: UserRole.SUPER_ADMIN,
                 code_acces: 2,
+            },
+            {
+                username: 'manager',
+                password: 'manager123',
+                fullname: 'Manager Principal',
+                role: UserRole.ADMIN,
+                code_acces: 1,
+            },
+            {
+                username: 'operateur',
+                password: 'operateur123',
+                fullname: 'Opérateur Colis',
+                role: UserRole.OPERATEUR_COLIS,
+                code_acces: 1,
+            },
+            {
+                username: 'caissier',
+                password: 'caissier123',
+                fullname: 'Caissier',
+                role: UserRole.CAISSIER,
+                code_acces: 1,
+            },
+        ];
+
+        for (const userData of testUsers) {
+            await this.createOrResetTestUser(userData);
+        }
+    }
+
+    // Créer ou réinitialiser un utilisateur de test
+    async createOrResetTestUser(userData: {
+        username: string;
+        password: string;
+        fullname: string;
+        role: UserRole;
+        code_acces: number;
+    }) {
+        const existingUser = await this.findByUsername(userData.username);
+        
+        if (!existingUser) {
+            // Créer l'utilisateur s'il n'existe pas
+            await this.create({
+                ...userData,
                 isActive: true,
             });
-            console.log('Default admin created: admin / adminpassword');
+            console.log(`✅ User created: ${userData.username} / ${userData.password}`);
+        } else {
+            // Vérifier et réinitialiser le mot de passe si nécessaire
+            const isPasswordCorrect = await bcrypt.compare(userData.password, existingUser.password);
+            if (!isPasswordCorrect) {
+                console.log(`⚠️  User ${userData.username} exists but password is different. Resetting...`);
+                const hashedPassword = await bcrypt.hash(userData.password, 10);
+                existingUser.password = hashedPassword;
+                existingUser.isActive = true; // S'assurer que l'utilisateur est actif
+                await this.usersRepository.save(existingUser);
+                console.log(`✅ User ${userData.username} password reset to: ${userData.password}`);
+            } else {
+                // S'assurer que l'utilisateur est actif
+                if (!existingUser.isActive) {
+                    existingUser.isActive = true;
+                    await this.usersRepository.save(existingUser);
+                    console.log(`✅ User ${userData.username} activated`);
+                } else {
+                    console.log(`✅ User ${userData.username} already exists with correct password`);
+                }
+            }
         }
     }
 }

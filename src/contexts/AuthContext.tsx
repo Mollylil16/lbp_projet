@@ -28,9 +28,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const hasCheckedAuth = useRef(false);
 
   // Vérifier si l'utilisateur est déjà connecté au chargement
   const checkAuth = useCallback(async () => {
+    // Éviter de vérifier plusieurs fois
+    if (hasCheckedAuth.current) {
+      return;
+    }
+
     try {
       const token = localStorage.getItem("lbp_token");
       if (token) {
@@ -40,27 +46,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           if (userStr) {
             setUser(JSON.parse(userStr));
             setIsLoading(false);
+            hasCheckedAuth.current = true;
             return;
           }
         }
 
         // Vérifier la validité du token et récupérer l'utilisateur
-        const userData = await authService.getCurrentUser();
-        setUser(userData);
+        try {
+          const userData = await authService.getCurrentUser();
+          setUser(userData);
+        } catch (error: any) {
+          // Si l'erreur est 401, le token est invalide
+          if (error.response?.status === 401 || error.response?.status === 403) {
+            console.warn("Token invalide, déconnexion...");
+            localStorage.removeItem("lbp_token");
+            localStorage.removeItem("lbp_refresh_token");
+            localStorage.removeItem("lbp_mock_user");
+            localStorage.removeItem("lbp_permissions");
+          } else {
+            // Pour les autres erreurs (réseau, etc.), on garde le token et on réessayera plus tard
+            console.warn("Erreur lors de la vérification du token:", error);
+          }
+        }
       }
     } catch (error) {
-      // Token invalide ou expiré
-      localStorage.removeItem("lbp_token");
-      localStorage.removeItem("lbp_refresh_token");
-      localStorage.removeItem("lbp_mock_user");
+      console.error("Erreur lors de la vérification de l'authentification:", error);
     } finally {
       setIsLoading(false);
+      hasCheckedAuth.current = true;
     }
   }, []);
 
   useEffect(() => {
+    // Ne vérifier qu'une seule fois au chargement initial
+    if (hasCheckedAuth.current) {
+      return;
+    }
+
+    const token = localStorage.getItem("lbp_token");
+    if (!token) {
+      console.log('[AuthContext] No token, stopping loading');
+      setIsLoading(false);
+      hasCheckedAuth.current = true;
+      return;
+    }
+
+    // En mode mock, récupérer depuis localStorage
+    if (import.meta.env.DEV && token.startsWith("mock_token_")) {
+      const userStr = localStorage.getItem("lbp_mock_user");
+      if (userStr) {
+        console.log('[AuthContext] Mock user found in localStorage');
+        setUser(JSON.parse(userStr));
+        setIsLoading(false);
+        hasCheckedAuth.current = true;
+        return;
+      }
+    }
+
+    // Vérifier la validité du token et récupérer l'utilisateur
+    console.log('[AuthContext] Checking auth with token');
     checkAuth();
-  }, [checkAuth]);
+  }, []); // Dépendances vides pour ne s'exécuter qu'une fois au montage
 
   const login = async (credentials: LoginCredentials) => {
     try {
@@ -84,9 +130,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         localStorage.setItem("lbp_mock_user", JSON.stringify(response.user));
       }
 
+      // Définir l'utilisateur directement depuis la réponse (pas besoin de vérifier à nouveau)
+      console.log('[Auth] Login successful, setting user:', response.user);
+      
+      // Marquer comme vérifié AVANT de définir l'utilisateur pour éviter checkAuth
+      hasCheckedAuth.current = true;
+      
+      // Définir l'utilisateur et arrêter le loading
       setUser(response.user);
+      setIsLoading(false);
+      
       toast.success(`Bienvenue ${response.user.full_name} !`);
-      navigate("/dashboard");
+      
+      // Naviguer vers le dashboard
+      console.log('[Auth] Navigating to dashboard');
+      navigate("/dashboard", { replace: true });
     } catch (error: any) {
       const message =
         error.response?.data?.message || error.message || "Erreur de connexion";
@@ -103,6 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.removeItem("lbp_permissions");
     localStorage.removeItem("lbp_mock_user");
     setUser(null);
+    hasCheckedAuth.current = false; // Réinitialiser pour permettre une nouvelle vérification
     navigate("/login");
     toast.success("Déconnexion réussie");
   };
@@ -116,6 +175,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       logout();
     }
   }, []);
+
+  // Debug: log quand l'état change
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[AuthContext] State changed:', { 
+        hasUser: !!user, 
+        isAuthenticated: !!user, 
+        isLoading,
+        username: user?.username 
+      })
+    }
+  }, [user, isLoading])
 
   const value: AuthContextType = {
     user,

@@ -15,8 +15,13 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredPermission,
   requireAll = false,
 }) => {
-  const { isAuthenticated, isLoading: isAuthLoading } = useAuth()
+  const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth()
   const { isLoading: isPermsLoading } = usePermissions()
+
+  // Debug logs
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[ProtectedRoute]', { isAuthenticated, isLoading: isAuthLoading, hasUser: !!user, path: window.location.pathname })
+  }
 
   const isLoading = isAuthLoading || isPermsLoading
 
@@ -36,9 +41,32 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     )
   }
 
-  // Rediriger vers login si non authentifié
-  if (!isAuthenticated) {
+  // Vérifier aussi le token dans localStorage comme fallback
+  const hasToken = !!localStorage.getItem('lbp_token');
+  
+  // Si on a un token, on considère qu'on est authentifié même si user n'est pas encore défini
+  // (cela peut arriver juste après le login avant que React ne mette à jour l'état)
+  const shouldBeAuthenticated = isAuthenticated || hasToken;
+
+  // Rediriger vers login UNIQUEMENT si on n'a ni utilisateur ni token ET qu'on n'est pas en train de charger
+  if (!shouldBeAuthenticated && !hasToken && !isLoading) {
+    console.warn('[ProtectedRoute] Not authenticated and no token, redirecting to login')
     return <Navigate to="/login" replace />
+  }
+
+  // Si on a un token mais pas d'utilisateur encore, attendre (cela peut arriver juste après le login)
+  if (hasToken && !user && !isLoading) {
+    console.log('[ProtectedRoute] Has token but no user yet, showing loader (might be just after login)')
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+      }}>
+        <Spin size="large" tip="Chargement..." />
+      </div>
+    )
   }
 
   // Vérifier les permissions si nécessaire

@@ -47,18 +47,31 @@ class ApiService {
 
         // Gérer les erreurs spécifiques
         if (error.response?.status === 401) {
-          // Token expiré ou invalide
-          localStorage.removeItem('lbp_token')
-          localStorage.removeItem('lbp_refresh_token')
-          localStorage.removeItem('lbp_permissions')
-          localStorage.removeItem('lbp_mock_user')
-          
-          // Rediriger vers login si pas déjà sur la page de login
-          if (window.location.pathname !== '/login') {
-            toast.error('Votre session a expiré. Veuillez vous reconnecter.')
-            setTimeout(() => {
-              window.location.href = '/login'
-            }, 1000)
+          // Ne pas déconnecter si on est sur la page de login ou si c'est une requête de login
+          const isLoginRequest = error.config?.url?.includes('/auth/login')
+          const isOnLoginPage = window.location.pathname === '/login'
+          const isAuthMeRequest = error.config?.url?.includes('/auth/me')
+
+          // Ne pas déconnecter pour les requêtes d'authentification ou si on vient juste de se connecter
+          if (!isLoginRequest && !isOnLoginPage && !isAuthMeRequest) {
+            // Vérifier si on a un token valide (peut-être juste une requête qui a échoué)
+            const token = localStorage.getItem('lbp_token')
+            if (token) {
+              // Token expiré ou invalide
+              console.warn('[API] 401 error, removing token and redirecting')
+              localStorage.removeItem('lbp_token')
+              localStorage.removeItem('lbp_refresh_token')
+              localStorage.removeItem('lbp_permissions')
+              localStorage.removeItem('lbp_mock_user')
+
+              // Rediriger vers login si pas déjà sur la page de login
+              toast.error('Votre session a expiré. Veuillez vous reconnecter.')
+              setTimeout(() => {
+                window.location.href = '/login'
+              }, 1000)
+            }
+          } else {
+            console.log('[API] 401 error but ignoring (login/auth request or on login page)')
           }
         } else if (error.response?.status === 403) {
           // Permission refusée
@@ -79,7 +92,7 @@ class ApiService {
           // Erreur réseau
           toast.error('Impossible de joindre le serveur. Vérifiez votre connexion internet.')
         }
-        
+
         // Rejeter avec l'erreur formatée
         return Promise.reject(appError)
       }

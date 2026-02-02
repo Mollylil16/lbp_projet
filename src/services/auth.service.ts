@@ -3,7 +3,8 @@ import { apiService } from './api.service'
 import { validateMockUser } from '@config/mockUsers'
 
 // Mode développement : utiliser les utilisateurs mock si le backend n'est pas disponible
-const USE_MOCK_AUTH = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_AUTH !== 'false'
+// Désactiver le mode mock pour utiliser le vrai backend
+const USE_MOCK_AUTH = false // import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_AUTH !== 'false'
 
 class AuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
