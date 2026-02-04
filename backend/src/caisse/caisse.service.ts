@@ -194,3 +194,5 @@ export class CaisseService implements OnApplicationBootstrap {
             solde_final: soldeFinal,
         };
     }
+
+}

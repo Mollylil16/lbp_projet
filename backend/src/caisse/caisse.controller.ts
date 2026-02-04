@@ -69,3 +69,5 @@ export class CaisseController {
     getRapportGrandesLignes(@Query() query: any) {
         return this.caisseService.getRapportGrandesLignes(query);
     }
+
+}

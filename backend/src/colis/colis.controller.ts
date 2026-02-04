@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request, Query, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, UseGuards, Request, Query, Patch } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ColisService } from './colis.service';
 import { CreateColisDto } from './dto/create-colis.dto';
@@ -28,6 +28,17 @@ export class ColisController {
     @ApiOperation({ summary: 'Alias pour créer un colis autres envois' })
     createAutresEnvois(@Body() createColisDto: CreateColisDto, @Request() req) {
         return this.create(createColisDto, req);
+    }
+
+    @Put(':id')
+    @ApiOperation({ summary: 'Mettre à jour un colis existant' })
+    @ApiResponse({ status: 200, description: 'Colis mis à jour avec succès' })
+    update(
+        @Param('id') id: string,
+        @Body() updateColisDto: CreateColisDto,
+        @Request() req,
+    ) {
+        return this.colisService.update(+id, updateColisDto, req.user.username, req.user.id_agence);
     }
 
     @Get()

@@ -70,6 +70,97 @@ export class ColisService {
         }
     }
 
+    async update(id: number, updateColisDto: CreateColisDto, userId: string, agenceId?: number): Promise<Colis> {
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+
+        try {
+            const { id_client, marchandises, ...colisData } = updateColisDto;
+
+            // 1. Charger le colis existant
+            const colis = await this.colisRepository.findOne({
+                where: { id },
+                relations: ['client', 'marchandises'],
+            });
+            if (!colis) {
+                throw new NotFoundException(`Colis #${id} not found`);
+            }
+
+            // 2. Vérifier le client
+            const client = await this.clientRepository.findOne({ where: { id: id_client } });
+            if (!client) {
+                throw new NotFoundException(`Client with ID ${id_client} not found`);
+            }
+
+            // 3. Mettre à jour les infos du colis (on garde la même ref_colis)
+            colis.trafic_envoi = colisData.trafic_envoi;
+            colis.forme_envoi = colisData.forme_envoi;
+
+            if (typeof colisData.mode_envoi !== 'undefined') {
+                colis.mode_envoi = colisData.mode_envoi;
+            }
+
+            colis.date_envoi = new Date(updateColisDto.date_envoi);
+            colis.client = client;
+            colis.nom_dest = colisData.nom_dest;
+
+            if (typeof colisData.lieu_dest !== 'undefined') {
+                colis.lieu_dest = colisData.lieu_dest;
+            }
+            if (typeof colisData.tel_dest !== 'undefined') {
+                colis.tel_dest = colisData.tel_dest;
+            }
+            if (typeof colisData.email_dest !== 'undefined') {
+                colis.email_dest = colisData.email_dest;
+            }
+
+            if (typeof colisData.nom_recup !== 'undefined') {
+                colis.nom_recup = colisData.nom_recup;
+            }
+            if (typeof colisData.adresse_recup !== 'undefined') {
+                colis.adresse_recup = colisData.adresse_recup;
+            }
+            if (typeof colisData.tel_recup !== 'undefined') {
+                colis.tel_recup = colisData.tel_recup;
+            }
+            if (typeof colisData.email_recup !== 'undefined') {
+                colis.email_recup = colisData.email_recup;
+            }
+
+            colis.code_user = userId;
+            if (typeof agenceId !== 'undefined') {
+                colis.id_agence = agenceId;
+            }
+
+            const savedColis = await queryRunner.manager.save(colis);
+
+            // 4. Supprimer les anciennes marchandises et recréer à partir du DTO
+            await queryRunner.manager.delete(Marchandise, { colis: { id: savedColis.id } as any });
+
+            if (marchandises && marchandises.length > 0) {
+                const marchandiseEntities = marchandises.map((m) =>
+                    this.marchandiseRepository.create({
+                        ...m,
+                        colis: savedColis,
+                    }),
+                );
+                await queryRunner.manager.save(marchandiseEntities);
+                savedColis.marchandises = marchandiseEntities;
+            } else {
+                savedColis.marchandises = [];
+            }
+
+            await queryRunner.commitTransaction();
+            return savedColis;
+        } catch (err) {
+            await queryRunner.rollbackTransaction();
+            throw err;
+        } finally {
+            await queryRunner.release();
+        }
+    }
+
     private async generateReference(): Promise<string> {
         const now = new Date();
         const mm = String(now.getMonth() + 1).padStart(2, '0');

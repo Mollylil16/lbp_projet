@@ -54,6 +54,7 @@ export const PaiementsListPage: React.FC = () => {
       key: 'encaisser',
       label: 'Encaisser un Colis',
       children: (
+        <>
           <div style={{ marginBottom: 24 }}>
             <Title level={3}>Encaisser un Paiement</Title>
             <Input.Group compact style={{ maxWidth: 500 }}>
@@ -61,7 +62,9 @@ export const PaiementsListPage: React.FC = () => {
                 placeholder="Entrer la référence du colis"
                 prefix={<SearchOutlined />}
                 value={searchRef}
-                onChange={(e) => setSearchRef(e.target.value.toUpperCase())}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setSearchRef(e.target.value.toUpperCase())
+                }
                 onPressEnter={handleSearchRef}
                 size="large"
                 style={{ width: 'calc(100% - 120px)' }}
@@ -103,6 +106,7 @@ export const PaiementsListPage: React.FC = () => {
               />
             )}
           </Modal>
+        </>
       ),
     },
   ]

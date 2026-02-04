@@ -207,16 +207,16 @@ export const ClientList: React.FC<ClientListProps> = ({
 
       {/* TABLEAU */}
       <Card>
-        <Table
+          <Table
           columns={columns}
-          dataSource={data?.data || []}
+          dataSource={data || []}
           loading={isLoading}
           rowKey="id"
           scroll={{ x: 1000 }}
           pagination={{
             current: pagination.page,
             pageSize: pagination.limit,
-            total: data?.total || 0,
+            total: data?.length || 0,
             showSizeChanger: true,
             showTotal: (total) => `Total: ${total} clients`,
             pageSizeOptions: ['10', '20', '50', '100'],

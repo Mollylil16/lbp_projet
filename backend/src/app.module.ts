@@ -20,17 +20,38 @@ import { RapportsModule } from './rapports/rapports.module';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USERNAME'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_DATABASE'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: configService.get<boolean>('DB_SYNCHRONIZE'),
-        logging: true,
-      }),
+      useFactory: (configService: ConfigService) => {
+        const parseNumber = (value: unknown, fallback?: number) => {
+          if (typeof value === 'number' && Number.isFinite(value)) return value;
+          if (typeof value === 'string' && value.trim() !== '') {
+            const n = Number(value);
+            if (Number.isFinite(n)) return n;
+          }
+          return fallback;
+        };
+
+        const parseBoolean = (value: unknown, fallback?: boolean) => {
+          if (typeof value === 'boolean') return value;
+          if (typeof value === 'string') {
+            const v = value.trim().toLowerCase();
+            if (['true', '1', 'yes', 'y', 'on'].includes(v)) return true;
+            if (['false', '0', 'no', 'n', 'off'].includes(v)) return false;
+          }
+          return fallback;
+        };
+
+        return {
+          type: 'postgres' as const,
+          host: configService.get<string>('DB_HOST'),
+          port: parseNumber(configService.get('DB_PORT'), 5432),
+          username: configService.get<string>('DB_USERNAME'),
+          password: configService.get<string>('DB_PASSWORD'),
+          database: configService.get<string>('DB_DATABASE'),
+          entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          synchronize: parseBoolean(configService.get('DB_SYNCHRONIZE'), false),
+          logging: true,
+        };
+      },
       inject: [ConfigService],
     }),
     UsersModule,

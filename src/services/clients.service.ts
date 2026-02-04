@@ -1,4 +1,4 @@
-import { User, PaginatedResponse, PaginationParams } from '@types'
+import { User, PaginationParams } from '@types'
 import { apiService } from './api.service'
 
 // Type ClientColis (expéditeur)
@@ -16,16 +16,16 @@ export interface ClientColis {
 class ClientsService {
   /**
    * Récupérer la liste des clients expéditeurs
+   * Le backend renvoie actuellement un simple tableau de clients (sans pagination serveur).
    */
-  async getClients(params?: PaginationParams): Promise<PaginatedResponse<ClientColis>> {
+  async getClients(params?: PaginationParams): Promise<ClientColis[]> {
     const queryParams = new URLSearchParams()
-    if (params?.page) queryParams.append('page', params.page.toString())
-    if (params?.limit) queryParams.append('limit', params.limit.toString())
     if (params?.search) queryParams.append('search', params.search)
-    if (params?.sort_by) queryParams.append('sort_by', params.sort_by)
-    if (params?.sort_order) queryParams.append('sort_order', params.sort_order)
 
-    return apiService.get<PaginatedResponse<ClientColis>>(`/clients?${queryParams.toString()}`)
+    const queryString = queryParams.toString()
+    const url = queryString ? `/clients/search?${queryString}` : '/clients'
+
+    return apiService.get<ClientColis>(url)
   }
 
   /**

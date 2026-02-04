@@ -19,9 +19,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import dayjs from 'dayjs'
 import { APP_CONFIG } from '@constants/application'
-import { calculerTotalLigneMarchandise } from '@utils/calculations'
+import { calculerTotalLigneMarchandise, calculerTotalMarchandises } from '@utils/calculations'
 import { formatMontantWithDevise } from '@utils/format'
 import type { CreateColisDto } from '@types'
+import { clientsService } from '@services/clients.service'
+import { message } from 'antd'
 
 const { Title, Text } = Typography
 const { Option } = Select
@@ -105,22 +107,20 @@ export const ColisForm: React.FC<ColisFormProps> = ({
   const marchandiseValues = watch('marchandise')
 
   useEffect(() => {
-    if (marchandiseValues) {
-      const total = marchandiseValues.reduce((sum, line) => {
-        if (!line) return sum
-        return (
-          sum +
-          calculerTotalLigneMarchandise(
-            line.prix_unit || 0,
-            line.nbre_colis || 0,
-            line.prix_emballage || 0,
-            line.prix_assurance || 0,
-            line.prix_agence || 0
-          )
-        )
-      }, 0)
-      setTotalGeneral(total)
+    if (!marchandiseValues || !Array.isArray(marchandiseValues)) {
+      setTotalGeneral(0)
+      return
     }
+
+    const safeMarchandises = marchandiseValues.map((line) => ({
+      prix_unit: line?.prix_unit || 0,
+      nbre_colis: line?.nbre_colis || 0,
+      prix_emballage: line?.prix_emballage || 0,
+      prix_assurance: line?.prix_assurance || 0,
+      prix_agence: line?.prix_agence || 0,
+    }))
+
+    setTotalGeneral(calculerTotalMarchandises(safeMarchandises))
   }, [marchandiseValues])
 
   const addMarchandiseLine = () => {
@@ -154,13 +154,70 @@ export const ColisForm: React.FC<ColisFormProps> = ({
     }
   }
 
-  const onFormSubmit = (data: ColisFormData) => {
-    // Ajouter forme_envoi aux données
-    const submitData: CreateColisDto = {
-      ...data,
-      forme_envoi: formeEnvoi,
+  const onFormSubmit = async (data: ColisFormData) => {
+    try {
+      // 1) Résoudre / créer le client expéditeur => id_client (attendu par le backend)
+      const tel = data.client_colis.tel_exp?.trim()
+      const nom = data.client_colis.nom_exp?.trim()
+
+      // On cherche d'abord par téléphone (plus fiable), sinon par nom
+      const searchTerm = tel || nom
+      if (!searchTerm) {
+        message.error("Téléphone ou nom de l'expéditeur requis pour créer le client")
+        return
+      }
+
+      const found = await clientsService.searchClients(searchTerm)
+      const existing =
+        found.find((c) => (tel ? c.tel_exp === tel : false)) ||
+        found.find((c) => c.nom_exp?.toLowerCase() === nom?.toLowerCase())
+
+      const client =
+        existing ||
+        (await clientsService.createClient({
+          nom_exp: data.client_colis.nom_exp,
+          type_piece_exp: data.client_colis.type_piece_exp,
+          num_piece_exp: data.client_colis.num_piece_exp,
+          tel_exp: data.client_colis.tel_exp,
+          email_exp: data.client_colis.email_exp || undefined,
+        }))
+
+      // 2) Mapper le modèle formulaire -> modèle backend
+      const payload = {
+        trafic_envoi: data.trafic_envoi,
+        forme_envoi: formeEnvoi,
+        mode_envoi: data.mode_envoi,
+        date_envoi: data.date_envoi,
+
+        id_client: client.id,
+
+        nom_dest: data.nom_destinataire,
+        lieu_dest: data.lieu_dest,
+        tel_dest: data.tel_dest,
+        email_dest: data.email_dest || undefined,
+
+        marchandises: (data.marchandise || []).map((m) => ({
+          nom_marchandise: m.nom_marchandise,
+          nbre_colis: m.nbre_colis,
+          nbre_articles: m.nbre_articles,
+          poids_total: m.poids_total,
+          prix_unit: m.prix_unit,
+          prix_emballage: m.prix_emballage || 0,
+          prix_assurance: m.prix_assurance || 0,
+          prix_agence: m.prix_agence || 0,
+        })),
+
+        nom_recup: data.nom_recup || undefined,
+        adresse_recup: data.adresse_recup || undefined,
+        tel_recup: data.tel_recup || undefined,
+        email_recup: data.email_recup || undefined,
+      }
+
+      onSubmit(payload as unknown as CreateColisDto)
+    } catch (e: any) {
+      console.error('[ColisForm] submit error:', e)
+      message.error(e?.message || 'Erreur lors de la préparation des données du colis')
     }
-    onSubmit(submitData)
   }
 
   const isGroupage = formeEnvoi === 'groupage'
