@@ -110,11 +110,102 @@ export class AuthService {
     }
 
     getPermissionsForUser(user: any): string[] {
-        // Dans lbp-frontend/src/constants/permissions.ts, CODEACCES 2 est Super Admin (*)
+        // CODEACCES 2 = Super Admin (toutes les permissions)
         if (user.code_acces === 2 || user.role === 'SUPER_ADMIN') {
             return ['*'];
         }
-        // TODO: Implémenter une logique de mapping plus fine si nécessaire
-        return [user.role.toLowerCase()];
+
+        // Mapper les rôles vers leurs permissions selon les constantes du frontend
+        const rolePermissions: Record<string, string[]> = {
+            'ADMIN': [
+                'dashboard.admin',
+                'colis.groupage.read',
+                'colis.groupage.create',
+                'colis.groupage.update',
+                'colis.groupage.delete',
+                'colis.autres-envois.read',
+                'colis.autres-envois.create',
+                'colis.autres-envois.update',
+                'colis.autres-envois.delete',
+                'clients.read',
+                'clients.create',
+                'clients.update',
+                'clients.delete',
+                'factures.read',
+                'factures.create',
+                'factures.validate',
+                'factures.print',
+                'paiements.read',
+                'paiements.create',
+                'rapports.view',
+                'rapports.export',
+                'caisse.view',
+                'caisse.operations',
+            ],
+            'OPERATEUR_COLIS': [
+                'dashboard.view',
+                'colis.groupage.read',
+                'colis.groupage.create',
+                'colis.groupage.update',
+                'colis.autres-envois.read',
+                'colis.autres-envois.create',
+                'colis.autres-envois.update',
+                'clients.read',
+                'clients.create',
+                'factures.read',
+                'factures.print',
+            ],
+            'CAISSIER': [
+                'dashboard.view',
+                'dashboard.caisse',
+                'colis.groupage.read',
+                'colis.autres-envois.read',
+                'factures.read',
+                'paiements.read',
+                'paiements.create',
+                'caisse.view',
+                'caisse.operations',
+            ],
+            'VALIDATEUR': [
+                'dashboard.view',
+                'colis.groupage.read',
+                'colis.groupage.validate',
+                'colis.autres-envois.read',
+                'colis.autres-envois.validate',
+                'factures.read',
+                'factures.validate',
+                'paiements.read',
+                'paiements.validate',
+            ],
+            'AGENCE_MANAGER': [
+                'dashboard.view',
+                'colis.groupage.read',
+                'colis.groupage.create',
+                'colis.groupage.update',
+                'colis.autres-envois.read',
+                'colis.autres-envois.create',
+                'colis.autres-envois.update',
+                'clients.read',
+                'clients.create',
+                'factures.read',
+                'factures.create',
+                'paiements.read',
+                'paiements.create',
+                'rapports.view',
+                'caisse.view',
+            ],
+            'LECTURE_SEULE': [
+                'dashboard.view',
+                'colis.groupage.read',
+                'colis.autres-envois.read',
+                'clients.read',
+                'factures.read',
+                'paiements.read',
+                'rapports.view',
+            ],
+        };
+
+        // Retourner les permissions selon le rôle
+        return rolePermissions[user.role] || [];
     }
 }

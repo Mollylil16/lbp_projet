@@ -21,8 +21,6 @@ import { WithPermission } from '@components/common/WithPermission'
 import { PERMISSIONS } from '@constants/permissions'
 import { useCaisses } from '@hooks/useCaisse'
 
-const { TabPane } = Tabs
-
 export const SuiviCaissePage: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState('appro')
   const [approFormVisible, setApproFormVisible] = React.useState(false)
@@ -50,6 +48,156 @@ export const SuiviCaissePage: React.FC = () => {
     setEntreeFormVisible(true)
   }
 
+  // Items pour les Tabs imbriqués (entrées)
+  const entreesTabItems = [
+    {
+      key: 'espece',
+      label: 'Espèce',
+      children: (
+        <MouvementsCaisseList
+          key={`entree-espece-${refreshKey}`}
+          type="ENTREE_ESPECE"
+          idCaisse={idCaisse}
+        />
+      ),
+    },
+    {
+      key: 'cheque',
+      label: 'Chèque',
+      children: (
+        <MouvementsCaisseList
+          key={`entree-cheque-${refreshKey}`}
+          type="ENTREE_CHEQUE"
+          idCaisse={idCaisse}
+        />
+      ),
+    },
+    {
+      key: 'virement',
+      label: 'Virement',
+      children: (
+        <MouvementsCaisseList
+          key={`entree-virement-${refreshKey}`}
+          type="ENTREE_VIREMENT"
+          idCaisse={idCaisse}
+        />
+      ),
+    },
+  ]
+
+  // Items pour les Tabs principaux
+  const mainTabItems = [
+    {
+      key: 'appro',
+      label: (
+        <span>
+          <ArrowUpOutlined /> APPRO (Approvisionnement)
+        </span>
+      ),
+      children: (
+        <Space direction="vertical" style={{ width: '100%' }} size="middle">
+          <div>
+            <WithPermission permission={PERMISSIONS.CAISSE.OPERATIONS}>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setApproFormVisible(true)}
+              >
+                Nouvel Approvisionnement
+              </Button>
+            </WithPermission>
+          </div>
+
+          <MouvementsCaisseList
+            key={`appro-${refreshKey}`}
+            type="APPRO"
+            idCaisse={idCaisse}
+          />
+        </Space>
+      ),
+    },
+    {
+      key: 'decaissement',
+      label: (
+        <span>
+          <ArrowDownOutlined /> DÉCAISSEMENT
+        </span>
+      ),
+      children: (
+        <Space direction="vertical" style={{ width: '100%' }} size="middle">
+          <div>
+            <WithPermission permission={PERMISSIONS.CAISSE.OPERATIONS}>
+              <Button
+                type="primary"
+                danger
+                icon={<PlusOutlined />}
+                onClick={() => setDecaissementFormVisible(true)}
+              >
+                Nouveau Décaissement
+              </Button>
+            </WithPermission>
+          </div>
+
+          <MouvementsCaisseList
+            key={`decaissement-${refreshKey}`}
+            type="DECAISSEMENT"
+            idCaisse={idCaisse}
+          />
+        </Space>
+      ),
+    },
+    {
+      key: 'entrees',
+      label: (
+        <span>
+          <DollarOutlined /> ENTRÉES DE CAISSE
+        </span>
+      ),
+      children: (
+        <Space direction="vertical" style={{ width: '100%' }} size="middle">
+          <div>
+            <WithPermission permission={PERMISSIONS.CAISSE.OPERATIONS}>
+              <Space wrap>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => handleOpenEntreeForm('ENTREE_ESPECE')}
+                >
+                  Entrée Espèce
+                </Button>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => handleOpenEntreeForm('ENTREE_CHEQUE')}
+                >
+                  Entrée Chèque
+                </Button>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => handleOpenEntreeForm('ENTREE_VIREMENT')}
+                >
+                  Entrée Virement
+                </Button>
+              </Space>
+            </WithPermission>
+          </div>
+
+          <Tabs size="small" type="card" items={entreesTabItems} />
+        </Space>
+      ),
+    },
+    {
+      key: 'rapport',
+      label: (
+        <span>
+          <FileTextOutlined /> RAPPORT GRANDES LIGNES
+        </span>
+      ),
+      children: <RapportGrandesLignes idCaisse={idCaisse} />,
+    },
+  ]
+
   return (
     <div style={{ padding: 24 }}>
       <Card>
@@ -71,144 +219,7 @@ export const SuiviCaissePage: React.FC = () => {
             )}
           </div>
 
-          <Tabs activeKey={activeTab} onChange={setActiveTab} size="large">
-            {/* TAB APPRO */}
-            <TabPane
-              tab={
-                <span>
-                  <ArrowUpOutlined /> APPRO (Approvisionnement)
-                </span>
-              }
-              key="appro"
-            >
-              <Space direction="vertical" style={{ width: '100%' }} size="middle">
-                <div>
-                  <WithPermission permission={PERMISSIONS.CAISSE.OPERATIONS}>
-                    <Button
-                      type="primary"
-                      icon={<PlusOutlined />}
-                      onClick={() => setApproFormVisible(true)}
-                    >
-                      Nouvel Approvisionnement
-                    </Button>
-                  </WithPermission>
-                </div>
-
-                <MouvementsCaisseList
-                  key={`appro-${refreshKey}`}
-                  type="APPRO"
-                  idCaisse={idCaisse}
-                />
-              </Space>
-            </TabPane>
-
-            {/* TAB DÉCAISSEMENT */}
-            <TabPane
-              tab={
-                <span>
-                  <ArrowDownOutlined /> DÉCAISSEMENT
-                </span>
-              }
-              key="decaissement"
-            >
-              <Space direction="vertical" style={{ width: '100%' }} size="middle">
-                <div>
-                  <WithPermission permission={PERMISSIONS.CAISSE.OPERATIONS}>
-                    <Button
-                      type="primary"
-                      danger
-                      icon={<PlusOutlined />}
-                      onClick={() => setDecaissementFormVisible(true)}
-                    >
-                      Nouveau Décaissement
-                    </Button>
-                  </WithPermission>
-                </div>
-
-                <MouvementsCaisseList
-                  key={`decaissement-${refreshKey}`}
-                  type="DECAISSEMENT"
-                  idCaisse={idCaisse}
-                />
-              </Space>
-            </TabPane>
-
-            {/* TAB ENTREES */}
-            <TabPane
-              tab={
-                <span>
-                  <DollarOutlined /> ENTRÉES DE CAISSE
-                </span>
-              }
-              key="entrees"
-            >
-              <Space direction="vertical" style={{ width: '100%' }} size="middle">
-                <div>
-                  <WithPermission permission={PERMISSIONS.CAISSE.OPERATIONS}>
-                    <Space wrap>
-                      <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        onClick={() => handleOpenEntreeForm('ENTREE_ESPECE')}
-                      >
-                        Entrée Espèce
-                      </Button>
-                      <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        onClick={() => handleOpenEntreeForm('ENTREE_CHEQUE')}
-                      >
-                        Entrée Chèque
-                      </Button>
-                      <Button
-                        type="primary"
-                        icon={<PlusOutlined />}
-                        onClick={() => handleOpenEntreeForm('ENTREE_VIREMENT')}
-                      >
-                        Entrée Virement
-                      </Button>
-                    </Space>
-                  </WithPermission>
-                </div>
-
-                <Tabs size="small" type="card">
-                  <TabPane tab="Espèce" key="espece">
-                    <MouvementsCaisseList
-                      key={`entree-espece-${refreshKey}`}
-                      type="ENTREE_ESPECE"
-                      idCaisse={idCaisse}
-                    />
-                  </TabPane>
-                  <TabPane tab="Chèque" key="cheque">
-                    <MouvementsCaisseList
-                      key={`entree-cheque-${refreshKey}`}
-                      type="ENTREE_CHEQUE"
-                      idCaisse={idCaisse}
-                    />
-                  </TabPane>
-                  <TabPane tab="Virement" key="virement">
-                    <MouvementsCaisseList
-                      key={`entree-virement-${refreshKey}`}
-                      type="ENTREE_VIREMENT"
-                      idCaisse={idCaisse}
-                    />
-                  </TabPane>
-                </Tabs>
-              </Space>
-            </TabPane>
-
-            {/* TAB RAPPORT */}
-            <TabPane
-              tab={
-                <span>
-                  <FileTextOutlined /> RAPPORT GRANDES LIGNES
-                </span>
-              }
-              key="rapport"
-            >
-              <RapportGrandesLignes idCaisse={idCaisse} />
-            </TabPane>
-          </Tabs>
+          <Tabs activeKey={activeTab} onChange={setActiveTab} size="large" items={mainTabItems} />
         </Space>
       </Card>
 

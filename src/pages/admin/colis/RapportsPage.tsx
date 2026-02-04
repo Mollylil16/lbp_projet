@@ -208,23 +208,38 @@ export const ColisRapportsPage: React.FC = () => {
       </Card>
 
       {reportParams && (
-        <Tabs defaultActiveKey="charts">
-          <Tabs.TabPane tab={<><BarChartOutlined /> Graphiques</>} key="charts">
-            <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-              <Col xs={24} lg={12}>
-                <ChartColisParMois data={chartData} />
-              </Col>
-              <Col xs={24} lg={12}>
-                <ChartRepartitionTrafic data={traficData} />
-              </Col>
-            </Row>
-          </Tabs.TabPane>
-          <Tabs.TabPane tab="Détails" key="details">
-            <Card>
-              <p>Tableau détaillé du rapport à implémenter</p>
-            </Card>
-          </Tabs.TabPane>
-        </Tabs>
+        <Tabs 
+          defaultActiveKey="charts"
+          items={[
+            {
+              key: 'charts',
+              label: (
+                <>
+                  <BarChartOutlined /> Graphiques
+                </>
+              ),
+              children: (
+                <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+                  <Col xs={24} lg={12}>
+                    <ChartColisParMois data={chartData} />
+                  </Col>
+                  <Col xs={24} lg={12}>
+                    <ChartRepartitionTrafic data={traficData} />
+                  </Col>
+                </Row>
+              ),
+            },
+            {
+              key: 'details',
+              label: 'Détails',
+              children: (
+                <Card>
+                  <p>Tableau détaillé du rapport à implémenter</p>
+                </Card>
+              ),
+            },
+          ]}
+        />
       )}
     </div>
   )

@@ -48,6 +48,13 @@ export class UsersService implements OnApplicationBootstrap {
         return this.usersRepository.findOne({ where: { id } });
     }
 
+    async findAll(): Promise<User[]> {
+        return this.usersRepository.find({
+            select: ['id', 'username', 'fullname', 'role', 'code_acces', 'id_agence', 'isActive', 'created_at'],
+            order: { created_at: 'DESC' }
+        });
+    }
+
     // Méthode pour l'initialisation (Seed) de tous les utilisateurs de test
     async createDefaultAdmin() {
         // Liste de tous les utilisateurs de test à créer
@@ -78,6 +85,13 @@ export class UsersService implements OnApplicationBootstrap {
                 password: 'caissier123',
                 fullname: 'Caissier',
                 role: UserRole.CAISSIER,
+                code_acces: 1,
+            },
+            {
+                username: 'validateur',
+                password: 'validateur123',
+                fullname: 'Validateur',
+                role: UserRole.VALIDATEUR,
                 code_acces: 1,
             },
         ];

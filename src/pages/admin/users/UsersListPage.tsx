@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Typography,
   Table,
@@ -14,6 +14,8 @@ import {
   Col,
   Select,
   Switch,
+  Spin,
+  message,
 } from "antd";
 import {
   EditOutlined,
@@ -28,29 +30,27 @@ import { User } from "@types";
 import { formatDate } from "@utils/format";
 import { PERMISSIONS } from "@constants/permissions";
 import { WithPermission } from "@components/common/WithPermission";
+import { usersService } from "@services/users.service";
+import { useQuery } from "@tanstack/react-query";
 
 const { Title } = Typography;
 const { Option } = Select;
-
-// Données simulées (à remplacer par des appels API)
-const mockUsers: User[] = [
-  {
-    id: 1,
-    code_user: "ADMIN001",
-    username: "admin",
-    full_name: "Super Administrateur",
-    email: "admin@lbp.ci",
-    role: { id: 1, code: "SUPER_ADMIN", name: "Super Administrateur" },
-    status: "active",
-    created_at: "2024-01-01",
-  },
-];
 
 export const UsersListPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreateMode, setIsCreateMode] = useState(false);
+
+  // Récupérer les utilisateurs depuis l'API
+  const { data: users = [], isLoading, refetch } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => usersService.getAll(),
+    onError: (error: any) => {
+      message.error('Erreur lors du chargement des utilisateurs');
+      console.error('Error loading users:', error);
+    },
+  });
 
   const columns: ColumnsType<User> = [
     {
@@ -162,7 +162,12 @@ export const UsersListPage: React.FC = () => {
 
           <Col xs={24} sm={8} md={12} style={{ textAlign: "right" }}>
             <Space>
-              <Button icon={<ReloadOutlined />} size="large">
+              <Button 
+                icon={<ReloadOutlined />} 
+                size="large"
+                onClick={() => refetch()}
+                loading={isLoading}
+              >
                 Actualiser
               </Button>
 
@@ -189,9 +194,18 @@ export const UsersListPage: React.FC = () => {
       <Card>
         <Table
           columns={columns}
-          dataSource={mockUsers}
+          dataSource={users.filter((user) => {
+            if (!searchTerm) return true;
+            const search = searchTerm.toLowerCase();
+            return (
+              user.username.toLowerCase().includes(search) ||
+              user.full_name.toLowerCase().includes(search) ||
+              (user.email && user.email.toLowerCase().includes(search))
+            );
+          })}
           rowKey="id"
           scroll={{ x: 1000 }}
+          loading={isLoading}
           pagination={{
             pageSize: 20,
             showSizeChanger: true,

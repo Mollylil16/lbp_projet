@@ -70,11 +70,13 @@ export class CaisseService implements OnApplicationBootstrap {
         });
 
         const total = mouvements.reduce((acc, mv) => {
+            // Les décaissements diminuent le solde
             if (mv.type === MouvementType.DECAISSEMENT) {
                 return acc - Number(mv.montant);
             }
+            // Tous les autres types (APPRO, ENTREE_*) augmentent le solde
             return acc + Number(mv.montant);
-        }, Number(caisse.solde_initial));
+        }, Number(caisse.solde_initial || 0));
 
         return total;
     }
@@ -113,4 +115,82 @@ export class CaisseService implements OnApplicationBootstrap {
     async findAllCaisses(): Promise<Caisse[]> {
         return this.caisseRepository.find();
     }
-}
+
+    async getRapportGrandesLignes(params: {
+        date_debut: string;
+        date_fin: string;
+        id_caisse?: number;
+    }): Promise<any> {
+        const { date_debut, date_fin, id_caisse = 1 } = params;
+        const startDate = new Date(date_debut);
+        const endDate = new Date(date_fin);
+        endDate.setHours(23, 59, 59, 999);
+
+        // Récupérer la caisse
+        const caisse = await this.caisseRepository.findOne({ where: { id: id_caisse } });
+        if (!caisse) {
+            throw new NotFoundException(`Caisse #${id_caisse} not found`);
+        }
+
+        // Récupérer tous les mouvements dans la période
+        const mouvements = await this.mouvementRepository.find({
+            where: {
+                caisse: { id: id_caisse },
+                date_mouvement: Between(startDate, endDate),
+            },
+            order: { date_mouvement: 'ASC' },
+        });
+
+        // Calculer les totaux
+        const totalAppro = mouvements
+            .filter(m => m.type === MouvementType.APPRO)
+            .reduce((sum, m) => sum + Number(m.montant), 0);
+
+        const totalDecaissement = mouvements
+            .filter(m => m.type === MouvementType.DECAISSEMENT)
+            .reduce((sum, m) => sum + Number(m.montant), 0);
+
+        const totalEntreesCheque = mouvements
+            .filter(m => m.type === MouvementType.ENTREE_CHEQUE)
+            .reduce((sum, m) => sum + Number(m.montant), 0);
+
+        const totalEntreesEspece = mouvements
+            .filter(m => m.type === MouvementType.ENTREE_ESPECE)
+            .reduce((sum, m) => sum + Number(m.montant), 0);
+
+        const totalEntreesVirement = mouvements
+            .filter(m => m.type === MouvementType.ENTREE_VIREMENT)
+            .reduce((sum, m) => sum + Number(m.montant), 0);
+
+        const totalEntrees = totalEntreesCheque + totalEntreesEspece + totalEntreesVirement;
+
+        // Solde initial (avant la période)
+        const mouvementsAvant = await this.mouvementRepository.find({
+            where: {
+                caisse: { id: id_caisse },
+                date_mouvement: Between(new Date('1900-01-01'), new Date(startDate.getTime() - 1)),
+            },
+        });
+
+        const soldeInitial = mouvementsAvant.reduce((acc, mv) => {
+            if (mv.type === MouvementType.DECAISSEMENT) {
+                return acc - Number(mv.montant);
+            }
+            return acc + Number(mv.montant);
+        }, Number(caisse.solde_initial));
+
+        const soldeFinal = soldeInitial + totalAppro - totalDecaissement + totalEntrees;
+
+        return {
+            date_debut: startDate.toISOString(),
+            date_fin: endDate.toISOString(),
+            total_appro: totalAppro,
+            total_decaissement: totalDecaissement,
+            total_entrees_cheque: totalEntreesCheque,
+            total_entrees_espece: totalEntreesEspece,
+            total_entrees_virement: totalEntreesVirement,
+            total_entrees: totalEntrees,
+            solde_initial: soldeInitial,
+            solde_final: soldeFinal,
+        };
+    }

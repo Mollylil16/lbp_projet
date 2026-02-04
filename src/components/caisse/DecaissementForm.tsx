@@ -260,23 +260,32 @@ export const DecaissementForm: React.FC<DecaissementFormProps> = ({
           </Form.Item>
         )}
 
-        {soldeActuel !== undefined && form.getFieldValue("montant") && (
-          <Form.Item label="Solde après décaissement">
-            <Input
-              value={
-                (
-                  soldeActuel - (form.getFieldValue("montant") || 0)
-                ).toLocaleString("fr-FR") + " FCFA"
-              }
-              disabled
-              style={{
-                backgroundColor: "#fff3cd",
-                color:
-                  soldeActuel - (form.getFieldValue("montant") || 0) < 0
-                    ? "#ff4d4f"
-                    : "#000",
-              }}
-            />
+        {soldeActuel !== undefined && (
+          <Form.Item
+            noStyle
+            shouldUpdate={(prevValues, currentValues) =>
+              prevValues.montant !== currentValues.montant
+            }
+          >
+            {({ getFieldValue }) => {
+              const montant = getFieldValue("montant") || 0;
+              const nouveauSolde = soldeActuel - montant;
+              
+              if (!montant) return null;
+              
+              return (
+                <Form.Item label="Solde après décaissement">
+                  <Input
+                    value={nouveauSolde.toLocaleString("fr-FR") + " FCFA"}
+                    disabled
+                    style={{
+                      backgroundColor: "#fff3cd",
+                      color: nouveauSolde < 0 ? "#ff4d4f" : "#000",
+                    }}
+                  />
+                </Form.Item>
+              );
+            }}
           </Form.Item>
         )}
       </Form>

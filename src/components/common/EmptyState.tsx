@@ -39,7 +39,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     <div className={`empty-state-container ${className}`}>
       <Empty
         image={image || Empty.PRESENTED_IMAGE_SIMPLE}
-        imageStyle={{ height: 120 }}
+        styles={{ image: { height: 120 } }}
         description={
           <div className="empty-state-content">
             <Title level={4} className="empty-state-title">

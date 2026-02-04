@@ -48,40 +48,55 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed }) => {
       icon: <DashboardOutlined />,
       label: "Tableau de bord",
     },
-    {
-      key: "colis",
-      icon: <InboxOutlined />,
-      label: "Gestion Colis",
-      children: [
-        ...(hasPermission("colis.groupage.read")
-          ? [
-            {
-              key: "/colis/groupage",
-              icon: <FolderOutlined />,
-              label: "Groupage",
-            },
-          ]
-          : []),
-        ...(hasPermission("colis.autres-envois.read")
-          ? [
-            {
-              key: "/colis/autres-envois",
-              icon: <InboxOutlined />,
-              label: "Autres Envois",
-            },
-          ]
-          : []),
-        ...(hasPermission("rapports.view")
-          ? [
-            {
-              key: "/colis/rapports",
-              icon: <BarChartOutlined />,
-              label: "Rapports",
-            },
-          ]
-          : []),
-      ],
-    },
+    // Afficher le menu "Gestion Colis" si l'utilisateur a au moins une permission liée aux colis
+    ...(hasPermission("colis.groupage.read") || 
+        hasPermission("colis.groupage.create") || 
+        hasPermission("colis.groupage.update") ||
+        hasPermission("colis.autres-envois.read") || 
+        hasPermission("colis.autres-envois.create") || 
+        hasPermission("colis.autres-envois.update") ||
+        hasPermission("rapports.view")
+      ? [
+        {
+          key: "colis",
+          icon: <InboxOutlined />,
+          label: "Gestion Colis",
+          children: [
+            ...(hasPermission("colis.groupage.read") || 
+                hasPermission("colis.groupage.create") || 
+                hasPermission("colis.groupage.update")
+              ? [
+                {
+                  key: "/colis/groupage",
+                  icon: <FolderOutlined />,
+                  label: "Groupage",
+                },
+              ]
+              : []),
+            ...(hasPermission("colis.autres-envois.read") || 
+                hasPermission("colis.autres-envois.create") || 
+                hasPermission("colis.autres-envois.update")
+              ? [
+                {
+                  key: "/colis/autres-envois",
+                  icon: <InboxOutlined />,
+                  label: "Autres Envois",
+                },
+              ]
+              : []),
+            ...(hasPermission("rapports.view")
+              ? [
+                {
+                  key: "/colis/rapports",
+                  icon: <BarChartOutlined />,
+                  label: "Rapports",
+                },
+              ]
+              : []),
+          ],
+        },
+      ]
+      : []),
     ...(hasPermission("clients.read")
       ? [
         {

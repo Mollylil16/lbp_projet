@@ -4,7 +4,9 @@ import { Caisse } from './caisse.entity';
 export enum MouvementType {
     APPRO = 'APPRO',
     DECAISSEMENT = 'DECAISSEMENT',
-    ENTREE = 'ENTREE',
+    ENTREE_CHEQUE = 'ENTREE_CHEQUE',
+    ENTREE_ESPECE = 'ENTREE_ESPECE',
+    ENTREE_VIREMENT = 'ENTREE_VIREMENT',
 }
 
 @Entity('lbp_mouvements_caisse')

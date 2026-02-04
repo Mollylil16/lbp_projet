@@ -225,6 +225,12 @@ export const LoginPage: React.FC = () => {
                               <Text code className="credential-password-premium">caissier123</Text>
                               <Text className="credential-badge-premium cashier">Caissier</Text>
                             </div>
+                            <div className="credential-row-premium">
+                              <Text code className="credential-username-premium">validateur</Text>
+                              <Text className="credential-separator-premium">/</Text>
+                              <Text code className="credential-password-premium">validateur123</Text>
+                              <Text className="credential-badge-premium validator">Validateur</Text>
+                            </div>
                           </div>
                         </div>
                       ),

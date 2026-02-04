@@ -10,7 +10,6 @@ import { WithPermission } from '@components/common/WithPermission'
 import { PERMISSIONS } from '@constants/permissions'
 
 const { Title } = Typography
-const { TabPane } = Tabs
 
 export const PaiementsListPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -45,16 +44,16 @@ export const PaiementsListPage: React.FC = () => {
     setRefColis('')
   }
 
-  return (
-    <div>
-      <Title level={2}>Gestion des Paiements</Title>
-
-      <Tabs defaultActiveKey="list">
-        <TabPane tab="Liste des Paiements" key="list">
-          <PaiementList />
-        </TabPane>
-
-        <TabPane tab="Encaisser un Colis" key="encaisser">
+  const tabItems = [
+    {
+      key: 'list',
+      label: 'Liste des Paiements',
+      children: <PaiementList />,
+    },
+    {
+      key: 'encaisser',
+      label: 'Encaisser un Colis',
+      children: (
           <div style={{ marginBottom: 24 }}>
             <Title level={3}>Encaisser un Paiement</Title>
             <Input.Group compact style={{ maxWidth: 500 }}>
@@ -104,8 +103,15 @@ export const PaiementsListPage: React.FC = () => {
               />
             )}
           </Modal>
-        </TabPane>
-      </Tabs>
+      ),
+    },
+  ]
+
+  return (
+    <div>
+      <Title level={2}>Gestion des Paiements</Title>
+
+      <Tabs defaultActiveKey="list" items={tabItems} />
     </div>
   )
 }

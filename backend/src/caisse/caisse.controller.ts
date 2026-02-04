@@ -26,7 +26,17 @@ export class CaisseController {
     @Post('entree')
     @ApiOperation({ summary: 'Enregistrer une entrée de caisse' })
     createEntree(@Body() data: any, @Request() req) {
-        return this.caisseService.createMovement(data, MouvementType.ENTREE, req.user.username);
+        // Déterminer le type d'entrée selon le mode de règlement
+        let type: MouvementType = MouvementType.ENTREE_ESPECE; // Par défaut
+        if (data.mode_reglement === 'CHEQUE') {
+            type = MouvementType.ENTREE_CHEQUE;
+        } else if (data.mode_reglement === 'VIREMENT') {
+            type = MouvementType.ENTREE_VIREMENT;
+        } else if (data.type) {
+            // Si le type est spécifié directement dans le body
+            type = data.type as MouvementType;
+        }
+        return this.caisseService.createMovement(data, type, req.user.username);
     }
 
     @Get('mouvements')
@@ -53,4 +63,9 @@ export class CaisseController {
     getCaisses() {
         return this.caisseService.findAllCaisses();
     }
-}
+
+    @Get('rapport-grandes-lignes')
+    @ApiOperation({ summary: 'Rapport grandes lignes de caisse' })
+    getRapportGrandesLignes(@Query() query: any) {
+        return this.caisseService.getRapportGrandesLignes(query);
+    }
