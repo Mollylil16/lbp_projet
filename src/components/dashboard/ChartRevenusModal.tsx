@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react'
 import { Modal, Typography, Table, Tag, Card, Row, Col, Statistic, Alert, Progress, Divider, Button, Space, message } from 'antd'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
-import { 
-  DollarOutlined, ArrowUpOutlined, ArrowDownOutlined, 
-  CheckCircleOutlined, WarningOutlined, TrophyOutlined, FilePdfOutlined, FileExcelOutlined 
+import {
+  DollarOutlined, ArrowUpOutlined, ArrowDownOutlined,
+  CheckCircleOutlined, WarningOutlined, TrophyOutlined, FilePdfOutlined, FileExcelOutlined
 } from '@ant-design/icons'
 import { formatMontantWithDevise } from '@utils/format'
 import { exportChartToPDF, exportMultiSheetToExcel } from '@utils/export'
@@ -41,16 +41,16 @@ const analyzePerformance = (data: ChartData[]): PerformanceAnalysis[] => {
     const ecart = item.revenus - item.objectif
     const pourcentageAtteint = item.objectif > 0 ? (item.revenus / item.objectif) * 100 : 0
     const status = pourcentageAtteint >= 100 ? 'succes' : pourcentageAtteint >= 80 ? 'partiel' : 'echec'
-    
+
     const causes: string[] = []
     const recommandations: string[] = []
-    
+
     if (status === 'echec') {
       causes.push(`Revenus inférieurs de ${formatMontantWithDevise(Math.abs(ecart))} par rapport à l'objectif`)
       causes.push('Baisse de la demande client')
       causes.push('Problèmes opérationnels ou logistiques')
       causes.push('Concurrence accrue ou perte de clients')
-      
+
       recommandations.push('Revoir la stratégie commerciale')
       recommandations.push('Améliorer la qualité de service')
       recommandations.push('Lancer des campagnes marketing ciblées')
@@ -58,7 +58,7 @@ const analyzePerformance = (data: ChartData[]): PerformanceAnalysis[] => {
     } else if (status === 'partiel') {
       causes.push(`Revenus proches de l'objectif mais pas atteints`)
       causes.push('Besoin d\'un petit effort supplémentaire')
-      
+
       recommandations.push('Maintenir l\'effort actuel')
       recommandations.push('Identifier les opportunités d\'amélioration')
     } else {
@@ -66,7 +66,7 @@ const analyzePerformance = (data: ChartData[]): PerformanceAnalysis[] => {
       recommandations.push('Maintenir cette performance')
       recommandations.push('Envisager d\'augmenter les objectifs futurs')
     }
-    
+
     return {
       mois: item.mois,
       revenus: item.revenus,
@@ -91,7 +91,7 @@ export const ChartRevenusModal: React.FC<ChartRevenusModalProps> = ({
   )
   const [exporting, setExporting] = useState(false)
   const chartRef = useRef<HTMLDivElement>(null)
-  
+
   const performances = analyzePerformance(data)
   const performancesForSelectedMonth = selectedMonth
     ? performances.filter(p => p.mois === selectedMonth)
@@ -231,7 +231,7 @@ export const ChartRevenusModal: React.FC<ChartRevenusModalProps> = ({
           },
         },
       ]
-      
+
       await exportMultiSheetToExcel(sheets, 'evolution_revenus', {
         title: 'Évolution des Revenus par Mois',
       })
@@ -264,16 +264,16 @@ export const ChartRevenusModal: React.FC<ChartRevenusModalProps> = ({
       footer={
         <Space>
           <Button onClick={onClose}>Fermer</Button>
-          <Button 
-            icon={<FilePdfOutlined />} 
+          <Button
+            icon={<FilePdfOutlined />}
             onClick={handleExportPDF}
             loading={exporting}
           >
             Exporter PDF
           </Button>
-          <Button 
+          <Button
             type="primary"
-            icon={<FileExcelOutlined />} 
+            icon={<FileExcelOutlined />}
             onClick={handleExportExcel}
             loading={exporting}
           >
@@ -293,7 +293,7 @@ export const ChartRevenusModal: React.FC<ChartRevenusModalProps> = ({
                 value={totalRevenus}
                 prefix={<DollarOutlined />}
                 valueStyle={{ color: '#52c41a' }}
-                formatter={(value) => formatMontantWithDevise(Number(value))}
+                formatter={(value: any) => formatMontantWithDevise(Number(value))}
               />
             </Card>
           </Col>
@@ -304,7 +304,7 @@ export const ChartRevenusModal: React.FC<ChartRevenusModalProps> = ({
                 value={totalObjectif}
                 prefix={<TrophyOutlined />}
                 valueStyle={{ color: '#1890ff' }}
-                formatter={(value) => formatMontantWithDevise(Number(value))}
+                formatter={(value: any) => formatMontantWithDevise(Number(value))}
               />
             </Card>
           </Col>
@@ -314,9 +314,9 @@ export const ChartRevenusModal: React.FC<ChartRevenusModalProps> = ({
                 title="Performance Globale"
                 value={performanceGlobale}
                 suffix="%"
-                valueStyle={{ 
+                valueStyle={{
                   color: performanceGlobale >= 100 ? '#52c41a' : performanceGlobale >= 80 ? '#faad14' : '#ff4d4f',
-                  fontSize: 24 
+                  fontSize: 24
                 }}
               />
               <Progress
@@ -332,48 +332,48 @@ export const ChartRevenusModal: React.FC<ChartRevenusModalProps> = ({
         <Card title="Graphique Détaillé" style={{ marginBottom: 24 }}>
           <div ref={chartRef}>
             <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorRevenus" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.3} />
-                </linearGradient>
-                <linearGradient id="colorObjectif" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.3} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
-              <XAxis dataKey="mois" stroke="#9ca3af" />
-              <YAxis 
-                stroke="#9ca3af"
-                tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
-              />
-              <Tooltip 
-                formatter={(value: number) => formatMontantWithDevise(value)}
-              />
-              <Legend />
-              <Bar 
-                dataKey="revenus" 
-                fill="url(#colorRevenus)" 
-                name="Revenus réels"
-                radius={[8, 8, 0, 0]}
-                onClick={(e: any) => setSelectedMonth(e.mois)}
-                cursor="pointer"
-              />
-              <Bar 
-                dataKey="objectif" 
-                fill="url(#colorObjectif)" 
-                name="Objectif"
-                radius={[8, 8, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+              <BarChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorRevenus" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="colorObjectif" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.3} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.5} />
+                <XAxis dataKey="mois" stroke="#9ca3af" />
+                <YAxis
+                  stroke="#9ca3af"
+                  tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
+                />
+                <Tooltip
+                  formatter={(value: number) => formatMontantWithDevise(value)}
+                />
+                <Legend />
+                <Bar
+                  dataKey="revenus"
+                  fill="url(#colorRevenus)"
+                  name="Revenus réels"
+                  radius={[8, 8, 0, 0]}
+                  onClick={(e: any) => setSelectedMonth(e.mois)}
+                  cursor="pointer"
+                />
+                <Bar
+                  dataKey="objectif"
+                  fill="url(#colorObjectif)"
+                  name="Objectif"
+                  radius={[8, 8, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </Card>
 
         {/* Analyse des performances */}
-        <Card 
+        <Card
           title={
             <div>
               <WarningOutlined style={{ color: '#1890ff', marginRight: 8 }} />
@@ -389,9 +389,9 @@ export const ChartRevenusModal: React.FC<ChartRevenusModalProps> = ({
             pagination={false}
             size="small"
           />
-          
+
           <Divider />
-          
+
           {/* Détails par mois */}
           {performancesForSelectedMonth.map((performance, index) => (
             <Card
@@ -406,7 +406,7 @@ export const ChartRevenusModal: React.FC<ChartRevenusModalProps> = ({
                     title="Revenus Réalisés"
                     value={performance.revenus}
                     prefix={<DollarOutlined />}
-                    formatter={(value) => formatMontantWithDevise(Number(value))}
+                    formatter={(value: any) => formatMontantWithDevise(Number(value))}
                     valueStyle={{ color: '#52c41a' }}
                   />
                 </Col>
@@ -420,9 +420,9 @@ export const ChartRevenusModal: React.FC<ChartRevenusModalProps> = ({
                   />
                 </Col>
               </Row>
-              
+
               <Divider style={{ margin: '16px 0' }} />
-              
+
               {performance.ecart < 0 && (
                 <Alert
                   message={`Écart négatif de ${formatMontantWithDevise(Math.abs(performance.ecart))}`}
@@ -432,7 +432,7 @@ export const ChartRevenusModal: React.FC<ChartRevenusModalProps> = ({
                   style={{ marginBottom: 16 }}
                 />
               )}
-              
+
               {performance.ecart >= 0 && (
                 <Alert
                   message={`Dépassement de ${formatMontantWithDevise(performance.ecart)}`}
@@ -442,7 +442,7 @@ export const ChartRevenusModal: React.FC<ChartRevenusModalProps> = ({
                   style={{ marginBottom: 16 }}
                 />
               )}
-              
+
               <div>
                 <Text strong>Causes Probables :</Text>
                 <ul style={{ marginTop: 8, marginBottom: 16 }}>
@@ -453,7 +453,7 @@ export const ChartRevenusModal: React.FC<ChartRevenusModalProps> = ({
                   ))}
                 </ul>
               </div>
-              
+
               <div>
                 <Text strong>Recommandations :</Text>
                 <ul style={{ marginTop: 8, marginBottom: 0 }}>

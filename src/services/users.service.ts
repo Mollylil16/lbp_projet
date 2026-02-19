@@ -4,15 +4,15 @@ import { apiService } from './api.service'
 class UsersService {
   async getAll(): Promise<User[]> {
     const users = await apiService.get<any[]>('/users')
-    
+
     // Transformer les données du backend au format attendu par le frontend
     return users.map((user) => ({
       id: user.id,
       code_user: `USER${user.id.toString().padStart(3, '0')}`,
       username: user.username,
       full_name: user.fullname,
-      email: null, // Peut être ajouté plus tard dans l'entité
-      phone: null, // Peut être ajouté plus tard dans l'entité
+      email: undefined,
+      phone: undefined,
       role: {
         id: this.getRoleId(user.role),
         code: user.role,
@@ -22,7 +22,7 @@ class UsersService {
       filter_mode: this.getFilterMode(user.code_acces),
       can_delete: user.code_acces === 2,
       can_modify: user.code_acces !== 2,
-      status: user.isActive ? 'active' : 'inactive' as 'active' | 'inactive',
+      status: user.isActive ? 'active' : 'inactive',
       created_at: user.created_at ? new Date(user.created_at).toISOString() : new Date().toISOString(),
     }))
   }

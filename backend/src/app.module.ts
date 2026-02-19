@@ -12,6 +12,14 @@ import { AuthModule } from './auth/auth.module';
 import { CaisseModule } from './caisse/caisse.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { RapportsModule } from './rapports/rapports.module';
+import { AlertModule } from './alerts/alert.module';
+import { NotificationModule } from './notifications/notification.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { TarifsModule } from './tarifs/tarifs.module';
+import { AgencesModule } from './agences/agences.module';
+import { RolesModule } from './roles/roles.module';
+import { PermissionsModule } from './permissions/permissions.module';
+import { ProduitsCatalogueModule } from './produits-catalogue/produits-catalogue.module';
 
 @Module({
   imports: [
@@ -59,10 +67,18 @@ import { RapportsModule } from './rapports/rapports.module';
     ColisModule,
     FacturesModule,
     PaiementsModule,
+    NotificationModule,
+    AnalyticsModule,
     AuthModule,
     CaisseModule,
     DashboardModule,
     RapportsModule,
+    AlertModule, // ✅ Module d'alertes automatiques
+    TarifsModule,
+    AgencesModule,
+    RolesModule,
+    PermissionsModule,
+    ProduitsCatalogueModule,
   ],
   controllers: [AppController],
   providers: [AppService],

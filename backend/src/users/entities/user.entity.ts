@@ -1,4 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { Agence } from '../../agences/entities/agence.entity';
+import { Role } from '../../roles/entities/role.entity';
+import { UserActionSpeciale } from './user-action-speciale.entity';
 
 export enum UserRole {
     SUPER_ADMIN = 'SUPER_ADMIN',
@@ -37,8 +40,20 @@ export class User {
     @Column({ default: true })
     isActive: boolean;
 
-    @Column({ nullable: true })
-    id_agence: number;
+    @ManyToOne(() => Agence, (agence) => agence.users, { nullable: true })
+    @JoinColumn({ name: 'id_agence' })
+    agence: Agence;
+
+    // Nouveau système de rôles et permissions
+    @ManyToOne(() => Role, (role) => role.users, { nullable: true, eager: true })
+    @JoinColumn({ name: 'role_id' })
+    roleEntity: Role;
+
+    @Column({ default: false })
+    peut_voir_toutes_agences: boolean;
+
+    @OneToMany(() => UserActionSpeciale, (userAction) => userAction.user, { eager: true })
+    actionsSpeciales: UserActionSpeciale[];
 
     @CreateDateColumn()
     created_at: Date;

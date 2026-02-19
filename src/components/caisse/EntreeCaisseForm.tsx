@@ -19,7 +19,7 @@ import {
   validateNumeroDossier,
 } from "@services/caisse.service";
 import type { MouvementCaisse, ModeReglement } from "@/types";
-import { useAuth } from "@contexts/AuthContext";
+import { useAuth } from "@hooks/useAuth";
 import { useColisList } from "@hooks/useColis";
 
 const { TextArea } = Input;
@@ -132,7 +132,7 @@ export const EntreeCaisseForm: React.FC<EntreeCaisseFormProps> = ({
       console.error("Erreur lors de la création de l'entrée de caisse:", error);
       message.error(
         error?.response?.data?.message ||
-          "Erreur lors de la création de l'entrée de caisse"
+        "Erreur lors de la création de l'entrée de caisse"
       );
     } finally {
       setLoading(false);
@@ -178,8 +178,8 @@ export const EntreeCaisseForm: React.FC<EntreeCaisseFormProps> = ({
         typeEntree === "ENTREE_CHEQUE"
           ? "Nouvelle Entrée de Caisse - Chèque"
           : typeEntree === "ENTREE_VIREMENT"
-          ? "Nouvelle Entrée de Caisse - Virement"
-          : "Nouvelle Entrée de Caisse - Espèce"
+            ? "Nouvelle Entrée de Caisse - Virement"
+            : "Nouvelle Entrée de Caisse - Espèce"
       }
       open={visible}
       onCancel={onCancel}
@@ -219,7 +219,7 @@ export const EntreeCaisseForm: React.FC<EntreeCaisseFormProps> = ({
           ]}
         >
           <Select
-            onChange={(value) => setModeReglement(value)}
+            onChange={(value: ModeReglement) => setModeReglement(value)}
             disabled={typeEntree !== undefined}
           >
             <Option value="ESPECE">Espèce</Option>
@@ -238,14 +238,14 @@ export const EntreeCaisseForm: React.FC<EntreeCaisseFormProps> = ({
           <AutoComplete
             options={dossierOptions}
             placeholder="Saisissez le numéro de dossier (ex: LBP-0124-001)"
-            onBlur={(e) => {
+            onBlur={(e: React.FocusEvent<HTMLElement>) => {
               const target = e.target as HTMLInputElement;
               if (target.value) {
                 handleValidateDossier(target.value);
               }
             }}
-            onSelect={(value) => handleValidateDossier(value)}
-            filterOption={(inputValue, option) =>
+            onSelect={(value: string) => handleValidateDossier(value)}
+            filterOption={(inputValue: string, option: any) =>
               option!.value.toUpperCase().indexOf(inputValue.toUpperCase()) !==
               -1
             }
@@ -380,7 +380,7 @@ export const EntreeCaisseForm: React.FC<EntreeCaisseFormProps> = ({
             placeholder="Montant en FCFA"
             min={0}
             step={1000}
-            formatter={(value) =>
+            formatter={(value: any) =>
               `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, " ")
             }
           />
@@ -402,7 +402,7 @@ export const EntreeCaisseForm: React.FC<EntreeCaisseFormProps> = ({
             placeholder="Reste à payer en FCFA"
             min={0}
             step={1000}
-            formatter={(value) =>
+            formatter={(value: any) =>
               `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, " ")
             }
           />

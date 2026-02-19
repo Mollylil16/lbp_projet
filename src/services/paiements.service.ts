@@ -69,6 +69,23 @@ class PaiementsService {
   async calculateRestantAPayer(refColis: string): Promise<RestantAPayerInfo> {
     return apiService.get<RestantAPayerInfo>(`/paiements/calculate/${refColis}`)
   }
+
+  /**
+   * Télécharger le reçu d'un paiement
+   */
+  async downloadReceipt(id: number, filename?: string): Promise<void> {
+    const response = await apiService.instance.get(`/paiements/${id}/receipt`, {
+      responseType: 'blob',
+    })
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename || `recu-paiement-${id}.pdf`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  }
 }
 
 export interface CreatePaiementDto {
@@ -82,7 +99,7 @@ export interface CreatePaiementDto {
   monnaie_rendue?: number // Pour paiement comptant
 }
 
-export interface UpdatePaiementDto extends Partial<CreatePaiementDto> {}
+export interface UpdatePaiementDto extends Partial<CreatePaiementDto> { }
 
 export interface RestantAPayerInfo {
   montant_total: number

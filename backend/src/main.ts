@@ -8,21 +8,36 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { initSentry } from './common/interceptors/sentry.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
+  // ✅ Initialiser Sentry pour monitoring des erreurs
+  const sentryDsn = configService.get<string>('SENTRY_DSN');
+  if (sentryDsn) {
+    initSentry(sentryDsn);
+  }
+
   // Prefix application
   const apiPrefix = configService.get<string>('API_PREFIX') || 'api';
   app.setGlobalPrefix(apiPrefix);
 
-  // Validation
+  // ✅ Validation globale avec messages d'erreur détaillés
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     transform: true,
     forbidNonWhitelisted: true,
+    transformOptions: {
+      enableImplicitConversion: true,
+    },
+    errorHttpStatusCode: 400,
   }));
+
+  // ✅ Gestion globale des erreurs
+  app.useGlobalFilters(new GlobalExceptionFilter());
 
   // CORS
   app.enableCors();

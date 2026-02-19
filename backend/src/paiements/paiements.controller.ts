@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, UseGuards, Request, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { PaiementsService } from './paiements.service';
 import { CreatePaiementDto } from './dto/create-paiement.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import type { Response } from 'express';
 
 @ApiTags('paiements')
 @ApiBearerAuth()
@@ -21,6 +22,24 @@ export class PaiementsController {
     @ApiOperation({ summary: 'Liste de tous les paiements' })
     findAll() {
         return this.paiementsService.findAll();
+    }
+
+    @Get(':id')
+    @ApiOperation({ summary: 'Détails d\'un paiement' })
+    findOne(@Param('id') id: string) {
+        return this.paiementsService.findOne(+id);
+    }
+
+    @Get(':id/receipt')
+    @ApiOperation({ summary: 'Télécharger le reçu PDF d\'un paiement' })
+    async getReceipt(@Param('id') id: string, @Res() res: Response) {
+        const buffer = await this.paiementsService.generateReceipt(+id);
+        res.set({
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `attachment; filename=recu-paiement-${id}.pdf`,
+            'Content-Length': buffer.length,
+        });
+        res.end(buffer);
     }
 
     @Get('facture/:id')

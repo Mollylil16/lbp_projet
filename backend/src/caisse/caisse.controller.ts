@@ -14,13 +14,13 @@ export class CaisseController {
     @Post('appro')
     @ApiOperation({ summary: 'Enregistrer un approvisionnement' })
     createAppro(@Body() data: any, @Request() req) {
-        return this.caisseService.createMovement(data, MouvementType.APPRO, req.user.username);
+        return this.caisseService.createMovement(data, MouvementType.APPRO, req.user.username, req.user.id_agence);
     }
 
     @Post('decaissement')
     @ApiOperation({ summary: 'Enregistrer un décaissement' })
     createDecaissement(@Body() data: any, @Request() req) {
-        return this.caisseService.createMovement(data, MouvementType.DECAISSEMENT, req.user.username);
+        return this.caisseService.createMovement(data, MouvementType.DECAISSEMENT, req.user.username, req.user.id_agence);
     }
 
     @Post('entree')
@@ -36,19 +36,24 @@ export class CaisseController {
             // Si le type est spécifié directement dans le body
             type = data.type as MouvementType;
         }
-        return this.caisseService.createMovement(data, type, req.user.username);
+        return this.caisseService.createMovement(data, type, req.user.username, req.user.id_agence);
     }
 
     @Get('mouvements')
     @ApiOperation({ summary: 'Liste des mouvements de caisse' })
-    getMouvements(@Query() query: any) {
-        return this.caisseService.getMouvements(query);
+    getMouvements(@Query() query: any, @Request() req) {
+        return this.caisseService.getMouvements(query, req.user.id_agence);
     }
 
     @Get('solde')
     @ApiOperation({ summary: 'Récupérer le solde actuel' })
-    async getSolde(@Query('id_caisse') id_caisse?: string) {
-        const solde = await this.caisseService.getSolde(id_caisse ? +id_caisse : 1);
+    async getSolde(@Query('id_caisse') id_caisse?: string, @Request() req?) {
+        let finalCaisseId = id_caisse ? +id_caisse : undefined;
+        if (!finalCaisseId && req?.user?.id_agence) {
+            const caisses = await this.caisseService.findAllCaisses(req.user.id_agence);
+            finalCaisseId = caisses[0]?.id;
+        }
+        const solde = await this.caisseService.getSolde(finalCaisseId || 1);
         return { solde };
     }
 
@@ -60,8 +65,8 @@ export class CaisseController {
 
     @Get('caisses')
     @ApiOperation({ summary: 'Liste des caisses' })
-    getCaisses() {
-        return this.caisseService.findAllCaisses();
+    getCaisses(@Request() req) {
+        return this.caisseService.findAllCaisses(req.user.id_agence);
     }
 
     @Get('rapport-grandes-lignes')
@@ -70,4 +75,9 @@ export class CaisseController {
         return this.caisseService.getRapportGrandesLignes(query);
     }
 
+    @Get('withdrawals')
+    @ApiOperation({ summary: 'Liste spécifique des retraits (décaissements)' })
+    getWithdrawals(@Query() query: any) {
+        return this.caisseService.getMouvements({ ...query, type: MouvementType.DECAISSEMENT });
+    }
 }

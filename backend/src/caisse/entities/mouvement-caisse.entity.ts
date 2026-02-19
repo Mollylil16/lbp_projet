@@ -29,6 +29,9 @@ export class MouvementCaisse {
     @Column({ type: 'date' })
     date_mouvement: Date;
 
+    @Column({ type: 'varchar', nullable: true })
+    mode_retrait: string; // ESPECE, WAVE, ORANGE_MONEY, VIREMENT_BANCAIRE
+
     @ManyToOne(() => Caisse, (caisse) => caisse.mouvements)
     @JoinColumn({ name: 'id_caisse' })
     caisse: Caisse;

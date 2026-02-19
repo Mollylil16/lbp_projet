@@ -40,7 +40,7 @@ export class UsersService implements OnApplicationBootstrap {
     async findByUsername(username: string): Promise<User | null> {
         return this.usersRepository.findOne({
             where: { username },
-            select: ['id', 'username', 'password', 'fullname', 'role', 'code_acces', 'id_agence', 'isActive']
+            select: ['id', 'username', 'password', 'fullname', 'role', 'code_acces', 'agence' as any, 'isActive']
         });
     }
 
@@ -50,7 +50,7 @@ export class UsersService implements OnApplicationBootstrap {
 
     async findAll(): Promise<User[]> {
         return this.usersRepository.find({
-            select: ['id', 'username', 'fullname', 'role', 'code_acces', 'id_agence', 'isActive', 'created_at'],
+            select: ['id', 'username', 'fullname', 'role', 'code_acces', 'agence' as any, 'isActive', 'created_at'],
             order: { created_at: 'DESC' }
         });
     }
@@ -110,7 +110,7 @@ export class UsersService implements OnApplicationBootstrap {
         code_acces: number;
     }) {
         const existingUser = await this.findByUsername(userData.username);
-        
+
         if (!existingUser) {
             // Créer l'utilisateur s'il n'existe pas
             await this.create({

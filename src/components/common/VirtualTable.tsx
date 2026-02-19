@@ -61,7 +61,7 @@ export function VirtualTable<T extends Record<string, any>>({
     if (!row) return null;
 
     const key =
-      typeof rowKey === "function" ? rowKey(row, index) : row[rowKey as string];
+      typeof rowKey === "function" ? (rowKey as any)(row, index) : row[rowKey as string];
 
     return (
       <div
@@ -74,9 +74,9 @@ export function VirtualTable<T extends Record<string, any>>({
         }}
         className="virtual-table-row"
       >
-        {columns?.map((col, colIndex) => {
+        {columns?.map((col: any, colIndex: number) => {
           // Vérifier si c'est une colonne simple (ColumnType) et non un groupe
-          const column = col as any;
+          const column = col;
           const dataIndex = column.dataIndex;
 
           const value = dataIndex

@@ -7,7 +7,7 @@ import React, {
   useRef,
 } from "react";
 import { notification } from "antd";
-import type { NotificationArgsProps } from "antd";
+import { notificationsService } from "@services/notifications.service";
 
 export type NotificationType = "info" | "success" | "warning" | "error";
 
@@ -46,23 +46,29 @@ export const NotificationsProvider: React.FC<{
   const [api, contextHolder] = notification.useNotification();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Charger les notifications depuis localStorage au démarrage
-  useEffect(() => {
-    const saved = localStorage.getItem("lbp_notifications");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved).map((n: any) => ({
-          ...n,
-          timestamp: new Date(n.timestamp),
-        }));
-        setNotifications(parsed);
-      } catch (error) {
-        console.error("Erreur lors du chargement des notifications:", error);
-      }
+  // Charger les notifications depuis le backend
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const data = await notificationsService.getUnread();
+      const formatted = data.map((n: any) => ({
+        ...n,
+        timestamp: new Date(n.created_at),
+        id: String(n.id)
+      }));
+      setNotifications(formatted);
+    } catch (error) {
+      console.error("Erreur lors du chargement des notifications:", error);
     }
   }, []);
 
-  // Sauvegarder les notifications dans localStorage
+  useEffect(() => {
+    fetchNotifications();
+    // Polling toutes les 2 minutes pour les nouvelles notifications
+    const interval = setInterval(fetchNotifications, 120000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
+
+  // Sauvegarder les notifications dans localStorage (en backup)
   useEffect(() => {
     if (notifications.length > 0) {
       localStorage.setItem("lbp_notifications", JSON.stringify(notifications));
@@ -72,7 +78,7 @@ export const NotificationsProvider: React.FC<{
   // Afficher une notification toast
   const showToast = useCallback(
     (notif: Notification) => {
-      const config: NotificationArgsProps = {
+      const config: any = {
         message: notif.title,
         description: notif.message,
         duration: notif.type === "error" ? 0 : 4.5,
@@ -103,42 +109,31 @@ export const NotificationsProvider: React.FC<{
 
   const addNotification = useCallback(
     (notif: Omit<Notification, "id" | "timestamp" | "read">) => {
+      // Pour les notifications "locales" si besoin, mais on privilégie le backend désormais
       const newNotification: Notification = {
         ...notif,
-        id: `${Date.now()}-${Math.random()}`,
+        id: `local-${Date.now()}`,
         timestamp: new Date(),
         read: false,
       };
 
-      setNotifications((prev) => {
-        const updated = [newNotification, ...prev].slice(0, MAX_NOTIFICATIONS);
-        return updated;
-      });
-
-      // Afficher le toast
+      setNotifications((prev) => [newNotification, ...prev].slice(0, MAX_NOTIFICATIONS));
       showToast(newNotification);
-
-      // Son de notification (si autorisé)
-      if (typeof window !== "undefined" && "Notification" in window) {
-        if (Notification.permission === "granted") {
-          new window.Notification(newNotification.title, {
-            body: newNotification.message,
-            icon: "/logo_lbp.png",
-            tag: newNotification.id,
-          });
-        }
-      }
     },
     [showToast]
   );
 
-  const markAsRead = useCallback((id: string) => {
+  const markAsRead = useCallback(async (id: string) => {
+    if (!id.startsWith('local-')) {
+      await notificationsService.markAsRead(Number(id));
+    }
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
   }, []);
 
-  const markAllAsRead = useCallback(() => {
+  const markAllAsRead = useCallback(async () => {
+    await notificationsService.markAllAsRead();
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   }, []);
 

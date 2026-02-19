@@ -212,13 +212,13 @@ export const PaiementForm: React.FC<PaiementFormProps> = ({
                   <InputNumber
                     {...field}
                     value={field.value}
-                    onChange={(value) => field.onChange(value || 0)}
+                    onChange={(value: number | null) => field.onChange(value || 0)}
                     min={0.01}
                     max={restantInfo?.restant_a_payer}
                     style={{ width: '100%' }}
                     size="large"
                     prefix={<DollarOutlined />}
-                    formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}
+                    formatter={(value: any) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}
                   />
                   {restantInfo && (
                     <Text type="secondary" style={{ display: 'block', marginTop: 4 }}>

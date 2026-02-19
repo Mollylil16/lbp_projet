@@ -44,7 +44,7 @@ export const ClientList: React.FC<ClientListProps> = ({
     ...pagination,
     search: searchTerm || undefined,
   })
-  
+
   const deleteMutation = useDeleteClient()
 
   const handleSearch = (value: string) => {
@@ -113,7 +113,7 @@ export const ClientList: React.FC<ClientListProps> = ({
       key: 'actions',
       fixed: 'right',
       width: 150,
-      render: (_, record) => (
+      render: (_: any, record: ClientColis) => (
         <Space size="small">
           {onView && (
             <Tooltip title="Voir détails">
@@ -172,8 +172,8 @@ export const ClientList: React.FC<ClientListProps> = ({
               prefix={<SearchOutlined />}
               allowClear
               value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              onPressEnter={(e) => handleSearch(e.currentTarget.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearch(e.target.value)}
+              onPressEnter={(e: React.KeyboardEvent<HTMLInputElement>) => handleSearch(e.currentTarget.value)}
               size="large"
             />
           </Col>
@@ -207,7 +207,7 @@ export const ClientList: React.FC<ClientListProps> = ({
 
       {/* TABLEAU */}
       <Card>
-          <Table
+        <Table
           columns={columns}
           dataSource={data || []}
           loading={isLoading}
@@ -218,7 +218,7 @@ export const ClientList: React.FC<ClientListProps> = ({
             pageSize: pagination.limit,
             total: data?.length || 0,
             showSizeChanger: true,
-            showTotal: (total) => `Total: ${total} clients`,
+            showTotal: (total: number) => `Total: ${total} clients`,
             pageSizeOptions: ['10', '20', '50', '100'],
           }}
           onChange={handleTableChange}

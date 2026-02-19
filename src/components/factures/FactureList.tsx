@@ -21,7 +21,13 @@ import {
   SearchOutlined,
   ReloadOutlined,
   PrinterOutlined,
+  GlobalOutlined,
+  CopyOutlined,
+  WhatsAppOutlined,
+  LinkOutlined
 } from "@ant-design/icons";
+import { Modal, Typography as AntdTypography } from "antd";
+import { paiementsLienService } from "@services/paiementsLien.service";
 import type { ColumnsType } from "antd/es/table";
 import dayjs, { Dayjs } from "dayjs";
 import { FactureColis } from "@types";
@@ -57,6 +63,10 @@ export const FactureList: React.FC<FactureListProps> = ({ type, onView }) => {
   const [dateRange, setDateRange] = useState<
     [Dayjs | null, Dayjs | null] | null
   >(null);
+  const [isLinkModalVisible, setIsLinkModalVisible] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState("");
+  const [currentFacture, setCurrentFacture] = useState<FactureColis | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["factures", typeFilter, pagination, searchTerm],
@@ -112,6 +122,31 @@ export const FactureList: React.FC<FactureListProps> = ({ type, onView }) => {
     }
   };
 
+  const handleGenerateLink = async (facture: FactureColis) => {
+    try {
+      setIsGenerating(true);
+      setCurrentFacture(facture);
+      const data = await paiementsLienService.generateLink(facture.id);
+      const publicUrl = `${window.location.origin}/pay/${data.token}`;
+      setGeneratedLink(publicUrl);
+      setIsLinkModalVisible(true);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Erreur lors de la génération du lien");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(generatedLink);
+    toast.success("Lien copié dans le presse-papier");
+  };
+
+  const shareViaWhatsApp = () => {
+    const message = `Bonjour, voici le lien de paiement pour votre facture ${currentFacture?.num_fact_colis} : ${generatedLink}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
+  };
+
   const columns: ColumnsType<FactureColis> = [
     {
       title: "N° Facture",
@@ -152,7 +187,7 @@ export const FactureList: React.FC<FactureListProps> = ({ type, onView }) => {
       title: "Statut",
       key: "etat",
       width: 120,
-      render: (_, record) => (
+      render: (_: any, record: FactureColis) => (
         <Tag color={record.etat === 1 ? "success" : "warning"}>
           {record.etat === 1 ? "Validée" : "Proforma"}
         </Tag>
@@ -167,7 +202,7 @@ export const FactureList: React.FC<FactureListProps> = ({ type, onView }) => {
       key: "actions",
       fixed: "right",
       width: 200,
-      render: (_, record) => (
+      render: (_: any, record: FactureColis) => (
         <Space size="small">
           {onView && (
             <Tooltip title="Voir détails">
@@ -192,6 +227,16 @@ export const FactureList: React.FC<FactureListProps> = ({ type, onView }) => {
               size="small"
               icon={<FilePdfOutlined />}
               onClick={() => handleDownload(record)}
+            />
+          </Tooltip>
+
+          <Tooltip title="Lien Paiement Mobile Money">
+            <Button
+              size="small"
+              icon={<LinkOutlined />}
+              onClick={() => handleGenerateLink(record)}
+              loading={isGenerating && currentFacture?.id === record.id}
+              style={{ color: '#ff7900' }}
             />
           </Tooltip>
 
@@ -249,8 +294,8 @@ export const FactureList: React.FC<FactureListProps> = ({ type, onView }) => {
               prefix={<SearchOutlined />}
               allowClear
               value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              onPressEnter={(e) => handleSearch(e.currentTarget.value)}
+              onChange={(e: any) => handleSearch(e.target.value)}
+              onPressEnter={(e: any) => handleSearch(e.currentTarget.value)}
               size="large"
             />
           </Col>
@@ -274,7 +319,7 @@ export const FactureList: React.FC<FactureListProps> = ({ type, onView }) => {
               style={{ width: "100%" }}
               size="large"
               value={dateRange}
-              onChange={(dates) =>
+              onChange={(dates: any) =>
                 setDateRange(dates as [Dayjs | null, Dayjs | null])
               }
               format="DD/MM/YYYY"
@@ -306,12 +351,62 @@ export const FactureList: React.FC<FactureListProps> = ({ type, onView }) => {
             pageSize: pagination.limit,
             total: data?.total || 0,
             showSizeChanger: true,
-            showTotal: (total) => `Total: ${total} factures`,
+            showTotal: (total: number) => `Total: ${total} factures`,
             pageSizeOptions: ["10", "20", "50", "100"],
           }}
           onChange={handleTableChange}
         />
       </Card>
+
+      {/* MODAL LIEN DE PAIEMENT */}
+      <Modal
+        title="Lien de Paiement Mobile Money"
+        open={isLinkModalVisible}
+        onCancel={() => setIsLinkModalVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setIsLinkModalVisible(false)}>
+            Fermer
+          </Button>,
+          <Button
+            key="whatsapp"
+            type="primary"
+            icon={<WhatsAppOutlined />}
+            onClick={shareViaWhatsApp}
+            style={{ background: "#25D366", borderColor: "#25D366" }}
+          >
+            WhatsApp
+          </Button>,
+          <Button
+            key="copy"
+            type="primary"
+            icon={<CopyOutlined />}
+            onClick={copyToClipboard}
+          >
+            Copier le lien
+          </Button>,
+        ]}
+      >
+        <Space direction="vertical" style={{ width: "100%" }} size="middle">
+          <AntdTypography.Text type="secondary">
+            Partagez ce lien avec votre client pour qu'il puisse payer via
+            Orange Money ou Wave.
+          </AntdTypography.Text>
+          <Input
+            value={generatedLink}
+            readOnly
+            addonBefore={<GlobalOutlined />}
+            size="large"
+          />
+          <Card size="small" style={{ background: "#f5f5f5" }}>
+            <AntdTypography.Paragraph style={{ marginBottom: 0 }}>
+              <strong>Facture:</strong> {currentFacture?.num_fact_colis}
+              <br />
+              <strong>Montant:</strong>{" "}
+              {currentFacture ? formatMontantWithDevise(currentFacture.total_mont_ttc) : ""}
+            </AntdTypography.Paragraph>
+          </Card>
+        </Space>
+      </Modal>
     </div>
   );
 };

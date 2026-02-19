@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { Form, Input, Button, Typography, Collapse, Space, Card, Switch, Tooltip } from 'antd'
-import { 
-  UserOutlined, 
-  LockOutlined, 
-  InfoCircleOutlined, 
+import {
+  UserOutlined,
+  LockOutlined,
+  InfoCircleOutlined,
   MoonOutlined,
   SunOutlined,
   ThunderboltOutlined
 } from '@ant-design/icons'
-import { useAuth } from '@contexts/AuthContext'
+import { useAuth } from '@hooks/useAuth'
 import './LoginPage.css'
 
 const { Title, Text } = Typography
@@ -69,9 +69,9 @@ export const LoginPage: React.FC = () => {
           <div className="left-panel-inner">
             <div className="brand-section-premium">
               <div className="logo-glass-container">
-                <img 
-                  src="/logo_lbp.png" 
-                  alt="La Belle Porte" 
+                <img
+                  src="/logo_lbp.png"
+                  alt="La Belle Porte"
                   className="premium-logo"
                 />
                 <div className="glass-shine"></div>
@@ -86,8 +86,8 @@ export const LoginPage: React.FC = () => {
 
             {/* SVG Illustration */}
             <div className="svg-illustration-container">
-              <svg 
-                viewBox="0 0 400 300" 
+              <svg
+                viewBox="0 0 400 300"
                 className="login-illustration"
                 xmlns="http://www.w3.org/2000/svg"
               >
@@ -106,7 +106,7 @@ export const LoginPage: React.FC = () => {
                     <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.2" />
                   </linearGradient>
                 </defs>
-                
+
                 {/* Floating Shapes */}
                 <circle cx="80" cy="80" r="40" fill="url(#grad1)" className="float-shape">
                   <animateTransform
@@ -126,7 +126,7 @@ export const LoginPage: React.FC = () => {
                     repeatCount="indefinite"
                   />
                 </circle>
-                
+
                 {/* Main Illustration - Secure Box/Shield */}
                 <g className="main-illustration">
                   {/* Shield */}
@@ -182,7 +182,7 @@ export const LoginPage: React.FC = () => {
             </div>
 
             {isDevMode && (
-              <Card 
+              <Card
                 className="dev-mode-card-premium"
                 size="small"
               >

@@ -19,8 +19,7 @@ jest.mock('@hooks/useColis', () => ({
   useValidateColis: jest.fn(),
 }))
 
-jest.mock('@contexts/PermissionsContext', () => ({
-  ...jest.requireActual('@contexts/PermissionsContext'),
+jest.mock('@hooks/usePermissions', () => ({
   usePermissions: () => ({
     hasPermission: jest.fn(() => true),
   }),

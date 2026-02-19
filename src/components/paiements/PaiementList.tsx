@@ -102,7 +102,7 @@ export const PaiementList: React.FC<PaiementListProps> = ({ refColis }) => {
       key: "actions",
       fixed: "right",
       width: 100,
-      render: (_, record) => (
+      render: (_: any, record: Paiement) => (
         <WithPermission permission={PERMISSIONS.PAIEMENTS.CANCEL}>
           <Popconfirm
             title="Annuler ce paiement ?"
@@ -179,7 +179,7 @@ export const PaiementList: React.FC<PaiementListProps> = ({ refColis }) => {
             pageSize: pagination.limit,
             total: data?.total || 0,
             showSizeChanger: true,
-            showTotal: (total) => `Total: ${total} paiements`,
+            showTotal: (total: number) => `Total: ${total} paiements`,
             pageSizeOptions: ["10", "20", "50", "100"],
           }}
           onChange={handleTableChange}

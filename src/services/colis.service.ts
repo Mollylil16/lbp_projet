@@ -25,6 +25,7 @@ function adaptColisFromBackend(backendColis: any): Colis {
   const premiereMarchandise = marchandises[0] || {}
 
   return {
+    ...backendColis, // Garder tous les champs originaux du backend (client, marchandises, etc.)
     id: backendColis.id,
     ref_colis: backendColis.ref_colis,
     mode_envoi: backendColis.mode_envoi || '',
@@ -59,6 +60,7 @@ function adaptColisFromBackend(backendColis: any): Colis {
     trafic_envoi: backendColis.trafic_envoi as any,
     code_user: backendColis.code_user || '',
     date_enrg: backendColis.created_at ? new Date(backendColis.created_at).toISOString() : '',
+    marchandises: marchandises,
   }
 }
 
@@ -127,10 +129,12 @@ class ColisService {
   /**
    * Récupérer tous les colis (pour compatibilité avec alerts.service)
    */
-  async getAll(params?: { statut?: string }): Promise<PaginatedResponse<Colis>> {
+  async getAll(params?: { statut?: string, limit?: number, page?: number }): Promise<PaginatedResponse<Colis>> {
     const queryParams = new URLSearchParams()
     if (params?.statut) queryParams.append('statut', params.statut)
-    
+    if (params?.limit) queryParams.append('limit', params.limit.toString())
+    if (params?.page) queryParams.append('page', params.page.toString())
+
     return apiService.get<PaginatedResponse<Colis>>(
       `/colis?${queryParams.toString()}`
     )
@@ -196,6 +200,7 @@ class ColisService {
 export interface ColisTrackingInfo {
   ref_colis: string
   status: string
+  payment_status?: string
   current_location?: string
   steps: Array<{
     title: string

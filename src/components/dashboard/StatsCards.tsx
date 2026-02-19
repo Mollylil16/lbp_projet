@@ -16,6 +16,7 @@ import { PERMISSIONS } from "@constants/permissions";
 import "./StatsCards.css";
 
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 interface StatsCardsProps {
   stats: DashboardStats;
@@ -93,6 +94,8 @@ export const StatsCards: React.FC<StatsCardsProps> = ({
   loading = false,
 }) => {
   const navigate = useNavigate();
+  const { getCurrency } = useAuth();
+  const currency = getCurrency();
 
   return (
     <div className="stats-cards-container">
@@ -151,7 +154,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({
           <Col xs={24} sm={12} lg={6}>
             <StatCard
               title="Revenus du jour"
-              value={formatMontantWithDevise(stats.revenus_jour)}
+              value={formatMontantWithDevise(stats.revenus_jour, currency)}
               icon={<DollarOutlined />}
               gradient=""
               iconBg="success"
@@ -163,7 +166,7 @@ export const StatsCards: React.FC<StatsCardsProps> = ({
           <Col xs={24} sm={12} lg={6}>
             <StatCard
               title="Revenus du mois"
-              value={formatMontantWithDevise(stats.revenus_mois)}
+              value={formatMontantWithDevise(stats.revenus_mois, currency)}
               icon={<RiseOutlined />}
               gradient=""
               iconBg="primary"

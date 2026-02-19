@@ -7,7 +7,7 @@ import { Modal, Form, Input, InputNumber, DatePicker, message } from "antd";
 import dayjs from "dayjs";
 import { createAppro } from "@services/caisse.service";
 import type { MouvementCaisse } from "@types";
-import { useAuth } from "@contexts/AuthContext";
+import { useAuth } from "@hooks/useAuth";
 
 const { TextArea } = Input;
 
@@ -57,7 +57,7 @@ export const ApproForm: React.FC<ApproFormProps> = ({
       );
       message.error(
         error?.response?.data?.message ||
-          "Erreur lors de la création de l'approvisionnement"
+        "Erreur lors de la création de l'approvisionnement"
       );
     } finally {
       setLoading(false);
@@ -118,10 +118,10 @@ export const ApproForm: React.FC<ApproFormProps> = ({
             placeholder="Montant en FCFA"
             min={0}
             step={1000}
-            formatter={(value) =>
+            formatter={(value: any) =>
               `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, " ")
             }
-            parser={(value) => Number(value?.replace(/\s?/g, "") || "0")}
+            parser={(value: any) => Number(value?.replace(/\s?/g, "") || "0")}
           />
         </Form.Item>
 

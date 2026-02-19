@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Patch, UseGuards, Request, Response } from '@nestjs/common';
+import { Controller, Get, Post, Param, Patch, UseGuards, Request, Response } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { FacturesService } from './factures.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -12,8 +12,16 @@ export class FacturesController {
 
     @Get()
     @ApiOperation({ summary: 'Liste de toutes les factures' })
-    findAll() {
-        return this.facturesService.findAll();
+    findAll(@Request() req) {
+        return this.facturesService.findAll(req.user.id_agence);
+    }
+
+    @Post('generate/:colisId')
+    @ApiOperation({ summary: 'Générer une facture depuis un colis' })
+    @ApiResponse({ status: 201, description: 'Facture générée avec succès' })
+    @ApiResponse({ status: 404, description: 'Colis non trouvé' })
+    async generateFromColis(@Param('colisId') colisId: string, @Request() req) {
+        return this.facturesService.generateFromColis(+colisId, req.user.username);
     }
 
     @Get('colis/:ref')

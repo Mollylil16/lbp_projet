@@ -25,7 +25,7 @@ class ClientsService {
     const queryString = queryParams.toString()
     const url = queryString ? `/clients/search?${queryString}` : '/clients'
 
-    return apiService.get<ClientColis>(url)
+    return apiService.get<any>(url)
   }
 
   /**
@@ -79,6 +79,6 @@ export interface CreateClientDto {
   email_exp?: string
 }
 
-export interface UpdateClientDto extends Partial<CreateClientDto> {}
+export interface UpdateClientDto extends Partial<CreateClientDto> { }
 
 export const clientsService = new ClientsService()

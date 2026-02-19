@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react'
-import { useAuth } from './AuthContext'
+import { useAuth } from '@hooks/useAuth'
 import { authService } from '@services/auth.service'
 
 interface PermissionsContextType {
@@ -10,7 +10,7 @@ interface PermissionsContextType {
   isLoading: boolean
 }
 
-const PermissionsContext = createContext<PermissionsContextType | undefined>(undefined)
+export const PermissionsContext = createContext<PermissionsContextType | undefined>(undefined)
 
 export const PermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAuthenticated } = useAuth()
@@ -116,10 +116,4 @@ export const PermissionsProvider: React.FC<{ children: React.ReactNode }> = ({ c
   )
 }
 
-export const usePermissions = () => {
-  const context = useContext(PermissionsContext)
-  if (!context) {
-    throw new Error('usePermissions must be used within a PermissionsProvider')
-  }
-  return context
-}
+

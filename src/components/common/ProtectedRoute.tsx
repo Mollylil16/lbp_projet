@@ -1,7 +1,7 @@
 import React from 'react'
 import { Navigate } from 'react-router-dom'
-import { useAuth } from '@contexts/AuthContext'
-import { usePermissions } from '@contexts/PermissionsContext'
+import { useAuth } from '@hooks/useAuth'
+import { usePermissions } from '@hooks/usePermissions'
 import { Spin } from 'antd'
 
 interface ProtectedRouteProps {
@@ -43,7 +43,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Vérifier aussi le token dans localStorage comme fallback
   const hasToken = !!localStorage.getItem('lbp_token');
-  
+
   // Si on a un token, on considère qu'on est authentifié même si user n'est pas encore défini
   // (cela peut arriver juste après le login avant que React ne mette à jour l'état)
   const shouldBeAuthenticated = isAuthenticated || hasToken;

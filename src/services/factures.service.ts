@@ -42,8 +42,8 @@ class FacturesService {
   /**
    * Créer une facture proforma pour un colis
    */
-  async createFactureProforma(refColis: string): Promise<FactureColis> {
-    return apiService.post<FactureColis>('/factures/proforma', { ref_colis: refColis })
+  async createFactureProforma(colisId: number): Promise<FactureColis> {
+    return apiService.post<FactureColis>(`/factures/generate/${colisId}`, {})
   }
 
   /**

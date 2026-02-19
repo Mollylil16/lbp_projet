@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, UseGuards, Request, Query, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query, Patch } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ColisService } from './colis.service';
 import { CreateColisDto } from './dto/create-colis.dto';
@@ -43,14 +43,14 @@ export class ColisController {
 
     @Get()
     @ApiOperation({ summary: 'Liste des colis' })
-    findAll(@Query() query) {
-        return this.colisService.findAll(query);
+    findAll(@Query() query, @Request() req) {
+        return this.colisService.findAll(query, req.user.id_agence);
     }
 
     @Get('search')
     @ApiOperation({ summary: 'Rechercher des colis' })
-    search(@Query('search') searchTerm: string, @Query('forme_envoi') formeEnvoi: string) {
-        return this.colisService.searchColis(searchTerm, formeEnvoi);
+    search(@Query('search') searchTerm: string, @Query('forme_envoi') formeEnvoi: string, @Request() req) {
+        return this.colisService.searchColis(searchTerm, formeEnvoi, req.user.id_agence);
     }
 
     @Get('track/:ref')
@@ -69,5 +69,13 @@ export class ColisController {
     @ApiOperation({ summary: 'Valider un colis' })
     validate(@Param('id') id: string) {
         return this.colisService.validateColis(+id);
+    }
+
+    @Delete(':id')
+    @ApiOperation({ summary: 'Supprimer un colis' })
+    @ApiResponse({ status: 200, description: 'Colis supprimé avec succès' })
+    @ApiResponse({ status: 403, description: 'Suppression non autorisée' })
+    async remove(@Param('id') id: string, @Request() req) {
+        return this.colisService.remove(+id, req.user);
     }
 }

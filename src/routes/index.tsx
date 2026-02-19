@@ -5,7 +5,7 @@
 
 import React, { lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '@hooks/useAuth'
 import { ProtectedRoute } from '../components/common/ProtectedRoute'
 import { MainLayout } from '../components/layout/MainLayout'
 import { PublicLayout } from '../components/layout/PublicLayout'
@@ -17,6 +17,7 @@ import { LazyPageLoader } from '../components/common/LazyPageLoader'
 // Pages - Public (lazy loaded)
 const LoginPage = lazy(() => import('../pages/public/LoginPage').then(m => ({ default: m.LoginPage })))
 const TrackPage = lazy(() => import('../pages/public/TrackPage').then(m => ({ default: m.TrackPage })))
+const PublicPaymentPage = lazy(() => import('../pages/public/PublicPaymentPage').then(m => ({ default: m.PublicPaymentPage })))
 
 // Pages - Admin (lazy loaded)
 const DashboardPage = lazy(() => import('../pages/admin/DashboardPage').then(m => ({ default: m.DashboardPage })))
@@ -25,6 +26,8 @@ const DashboardPage = lazy(() => import('../pages/admin/DashboardPage').then(m =
 const ColisGroupageListPage = lazy(() => import('../pages/admin/colis/GroupageListPage').then(m => ({ default: m.ColisGroupageListPage })))
 const ColisAutresEnvoisListPage = lazy(() => import('../pages/admin/colis/AutresEnvoisListPage').then(m => ({ default: m.ColisAutresEnvoisListPage })))
 const ColisRapportsPage = lazy(() => import('../pages/admin/colis/RapportsPage').then(m => ({ default: m.ColisRapportsPage })))
+const ColisMapView = lazy(() => import('../pages/admin/colis/ColisMapView').then(m => ({ default: m.ColisMapView })))
+const ExpeditionsPage = lazy(() => import('../pages/expeditions/ExpeditionsPage').then(m => ({ default: m.ExpeditionsPage })))
 
 // Pages - Clients (lazy loaded)
 const ClientsListPage = lazy(() => import('../pages/admin/clients/ClientsListPage').then(m => ({ default: m.ClientsListPage })))
@@ -44,9 +47,12 @@ const UsersListPage = lazy(() => import('../pages/admin/users/UsersListPage').th
 
 // Pages - Caisse (lazy loaded)
 const SuiviCaissePage = lazy(() => import('../pages/admin/caisse/SuiviCaissePage').then(m => ({ default: m.SuiviCaissePage })))
+const WithdrawalTrackingPage = lazy(() => import('../pages/admin/caisse/WithdrawalTrackingPage'))
 
 // Pages - Statistiques (lazy loaded)
 const StatistiquesHistoriquesPage = lazy(() => import('../pages/admin/statistiques/StatistiquesHistoriquesPage').then(m => ({ default: m.StatistiquesHistoriquesPage })))
+const RentabiliteTarifPage = lazy(() => import('../pages/admin/statistiques/RentabiliteTarifPage'))
+const TarifManagementPage = lazy(() => import('../pages/admin/settings/TarifManagementPage'))
 
 /**
  * Configuration des routes de l'application
@@ -67,6 +73,14 @@ export const AppRoutes: React.FC = () => {
           element={
             <LazyPageLoader>
               <TrackPage />
+            </LazyPageLoader>
+          }
+        />
+        <Route
+          path="pay/:token"
+          element={
+            <LazyPageLoader>
+              <PublicPaymentPage />
             </LazyPageLoader>
           }
         />
@@ -125,7 +139,25 @@ export const AppRoutes: React.FC = () => {
               </LazyPageLoader>
             }
           />
+          <Route
+            path="map"
+            element={
+              <LazyPageLoader>
+                <ColisMapView />
+              </LazyPageLoader>
+            }
+          />
         </Route>
+
+        {/* Expéditions / Manifestes */}
+        <Route
+          path="expeditions"
+          element={
+            <LazyPageLoader>
+              <ExpeditionsPage />
+            </LazyPageLoader>
+          }
+        />
 
         {/* Clients */}
         <Route
@@ -176,6 +208,14 @@ export const AppRoutes: React.FC = () => {
             </LazyPageLoader>
           }
         />
+        <Route
+          path="caisse/retraits"
+          element={
+            <LazyPageLoader>
+              <WithdrawalTrackingPage />
+            </LazyPageLoader>
+          }
+        />
 
         {/* Settings */}
         <Route
@@ -193,6 +233,22 @@ export const AppRoutes: React.FC = () => {
           element={
             <LazyPageLoader>
               <StatistiquesHistoriquesPage />
+            </LazyPageLoader>
+          }
+        />
+        <Route
+          path="statistiques/rentabilite"
+          element={
+            <LazyPageLoader>
+              <RentabiliteTarifPage />
+            </LazyPageLoader>
+          }
+        />
+        <Route
+          path="settings/tarifs"
+          element={
+            <LazyPageLoader>
+              <TarifManagementPage />
             </LazyPageLoader>
           }
         />

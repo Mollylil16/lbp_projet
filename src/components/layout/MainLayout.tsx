@@ -8,7 +8,7 @@ import {
   LogoutOutlined,
   SettingOutlined,
 } from '@ant-design/icons'
-import { useAuth } from '@contexts/AuthContext'
+import { useAuth } from '@hooks/useAuth'
 import type { MenuProps } from 'antd'
 import { SidebarMenu } from './SidebarMenu'
 import { SkipToMain } from '../common/SkipToMain'

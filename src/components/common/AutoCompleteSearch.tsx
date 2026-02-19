@@ -9,6 +9,7 @@ import { SearchOutlined, LoadingOutlined } from "@ant-design/icons";
 import type { AutoCompleteProps } from "antd";
 import { useDebounce } from "@hooks/useDebounce";
 import { persistentCache } from "@utils/cachePersistent";
+import { fuzzySearch } from "@utils/ai";
 import "./AutoCompleteSearch.css";
 
 interface AutoCompleteSearchProps<T = any> {
@@ -109,8 +110,21 @@ export function AutoCompleteSearch<T = any>({
       // Vérifier le cache d'abord
       const cachedResults = queryLower ? cache.get(queryLower) : undefined;
       if (cachedResults) {
+        // Appliquer une recherche floue sur les résultats en cache pour plus de précision
+        const fuzzyResults = fuzzySearch(
+          query,
+          cachedResults,
+          [
+            (item: T) =>
+              typeof displayField === "function"
+                ? displayField(item)
+                : (item as any)[displayField] || "",
+          ],
+          0.3 // Score de similarité minimum
+        );
+
         const formattedOptions = formatOptions(
-          cachedResults.slice(0, maxSuggestions)
+          fuzzyResults.slice(0, maxSuggestions)
         );
         setOptions(formattedOptions);
         return;
@@ -121,7 +135,7 @@ export function AutoCompleteSearch<T = any>({
       try {
         const results = await onSearch(query);
 
-        // Mettre en cache les résultats
+        // Mettre en cache les résultats bruts
         const newCache = new Map(cache);
         newCache.set(queryLower, results);
         setCache(newCache);
@@ -134,8 +148,21 @@ export function AutoCompleteSearch<T = any>({
           }
         }
 
+        // Trier les résultats de l'API par pertinence (Fuzzy)
+        const fuzzyResults = fuzzySearch(
+          query,
+          results,
+          [
+            (item: T) =>
+              typeof displayField === "function"
+                ? displayField(item)
+                : (item as any)[displayField] || "",
+          ],
+          0.2
+        );
+
         const formattedOptions = formatOptions(
-          results.slice(0, maxSuggestions)
+          fuzzyResults.slice(0, maxSuggestions)
         );
         setOptions(formattedOptions);
       } catch (error) {

@@ -9,8 +9,8 @@ interface AnalyseTendancesMensuellesProps {
   data: TendancesMensuelles[]
 }
 
-export const AnalyseTendancesMensuelles: React.FC<AnalyseTendancesMensuellesProps> = ({ 
-  data 
+export const AnalyseTendancesMensuelles: React.FC<AnalyseTendancesMensuellesProps> = ({
+  data
 }) => {
   const moisReussis = data.filter(t => t.tendance === 'hausse')
   const moisChutes = data.filter(t => t.tendance === 'baisse')
@@ -129,7 +129,7 @@ export const AnalyseTendancesMensuelles: React.FC<AnalyseTendancesMensuellesProp
         rowKey="mois"
         pagination={false}
         size="small"
-        rowClassName={(record) => {
+        rowClassName={(record: TendancesMensuelles) => {
           if (record.tendance === 'hausse') return 'row-success'
           if (record.tendance === 'baisse') return 'row-danger'
           return ''

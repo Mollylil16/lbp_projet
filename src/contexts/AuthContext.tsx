@@ -18,9 +18,10 @@ interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
+  getCurrency: () => string;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -132,16 +133,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Définir l'utilisateur directement depuis la réponse (pas besoin de vérifier à nouveau)
       console.log('[Auth] Login successful, setting user:', response.user);
-      
+
       // Marquer comme vérifié AVANT de définir l'utilisateur pour éviter checkAuth
       hasCheckedAuth.current = true;
-      
+
       // Définir l'utilisateur et arrêter le loading
       setUser(response.user);
       setIsLoading(false);
-      
+
       toast.success(`Bienvenue ${response.user.full_name} !`);
-      
+
       // Naviguer vers le dashboard
       console.log('[Auth] Navigating to dashboard');
       navigate("/dashboard", { replace: true });
@@ -176,14 +177,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
+  const getCurrency = useCallback(() => {
+    return user?.agency?.currency || "XOF";
+  }, [user]);
+
   // Debug: log quand l'état change
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[AuthContext] State changed:', { 
-        hasUser: !!user, 
-        isAuthenticated: !!user, 
+      console.log('[AuthContext] State changed:', {
+        hasUser: !!user,
+        isAuthenticated: !!user,
         isLoading,
-        username: user?.username 
+        username: user?.username
       })
     }
   }, [user, isLoading])
@@ -195,15 +200,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     login,
     logout,
     refreshUser,
+    getCurrency,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
+

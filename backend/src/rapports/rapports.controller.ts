@@ -39,4 +39,10 @@ export class RapportsController {
         });
         res.end(buffer);
     }
+
+    @Get('finances-tarif')
+    @ApiOperation({ summary: 'Obtenir les finances groupées par tarif' })
+    async getFinancesParTarif() {
+        return this.rapportsService.getFinancesParTarif();
+    }
 }

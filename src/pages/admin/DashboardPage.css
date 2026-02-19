@@ -28,3 +28,25 @@
 .dashboard-section {
   margin-bottom: 24px;
 }
+
+/* AI Intelligence Panel */
+.ai-intelligence-panel {
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(24, 144, 255, 0.1);
+  height: 100%;
+}
+
+.ai-reco-item {
+  padding: 16px 0 !important;
+  border: none !important;
+}
+
+.ai-reco-item .ant-alert {
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.ai-reco-item .ant-typography {
+  margin-bottom: 8px !important;
+}

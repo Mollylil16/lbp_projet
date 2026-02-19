@@ -143,7 +143,7 @@ export const RapportGrandesLignes: React.FC<RapportGrandesLignesProps> = ({
       title: "Type",
       dataIndex: "type",
       key: "type",
-      render: (text: string, record) => (
+      render: (text: string, record: any) => (
         <span style={{ fontWeight: record.bold ? "bold" : "normal" }}>
           {text}
         </span>
@@ -154,7 +154,7 @@ export const RapportGrandesLignes: React.FC<RapportGrandesLignesProps> = ({
       dataIndex: "montant",
       key: "montant",
       align: "right",
-      render: (montant: number, record) => (
+      render: (montant: number, record: any) => (
         <Tag
           color={record.color}
           style={{
@@ -174,7 +174,7 @@ export const RapportGrandesLignes: React.FC<RapportGrandesLignesProps> = ({
         <Space wrap>
           <RangePicker
             value={dateRange}
-            onChange={(dates) =>
+            onChange={(dates: any) =>
               setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs])
             }
             format="DD/MM/YYYY"
@@ -211,7 +211,7 @@ export const RapportGrandesLignes: React.FC<RapportGrandesLignesProps> = ({
                 value={rapport.total_appro}
                 prefix="+"
                 valueStyle={{ color: "#52c41a" }}
-                formatter={(value) => formatMontantWithDevise(Number(value))}
+                formatter={(value: any) => formatMontantWithDevise(Number(value))}
               />
             </Card>
           </Col>
@@ -222,7 +222,7 @@ export const RapportGrandesLignes: React.FC<RapportGrandesLignesProps> = ({
                 value={rapport.total_decaissement}
                 prefix="-"
                 valueStyle={{ color: "#ff4d4f" }}
-                formatter={(value) => formatMontantWithDevise(Number(value))}
+                formatter={(value: any) => formatMontantWithDevise(Number(value))}
               />
             </Card>
           </Col>
@@ -233,7 +233,7 @@ export const RapportGrandesLignes: React.FC<RapportGrandesLignesProps> = ({
                 value={rapport.total_entrees}
                 prefix="+"
                 valueStyle={{ color: "#1890ff" }}
-                formatter={(value) => formatMontantWithDevise(Number(value))}
+                formatter={(value: any) => formatMontantWithDevise(Number(value))}
               />
             </Card>
           </Col>
@@ -246,7 +246,7 @@ export const RapportGrandesLignes: React.FC<RapportGrandesLignesProps> = ({
                 title="Solde Initial"
                 value={rapport.solde_initial}
                 valueStyle={{ color: "#666" }}
-                formatter={(value) => formatMontantWithDevise(Number(value))}
+                formatter={(value: any) => formatMontantWithDevise(Number(value))}
               />
             </Card>
           </Col>
@@ -260,7 +260,7 @@ export const RapportGrandesLignes: React.FC<RapportGrandesLignesProps> = ({
                   fontWeight: "bold",
                   fontSize: 20,
                 }}
-                formatter={(value) => formatMontantWithDevise(Number(value))}
+                formatter={(value: any) => formatMontantWithDevise(Number(value))}
               />
             </Card>
           </Col>

@@ -12,14 +12,16 @@ import { WithPermission } from '@components/common/WithPermission'
 import { PERMISSIONS } from '@constants/permissions'
 import { APP_CONFIG } from '@constants/application'
 import { useAlerts } from '@services/alerts.service'
-import { useAuth } from '@contexts/AuthContext'
+import { useAuth } from '@hooks/useAuth'
+import { PredictionCard } from '@components/dashboard/PredictionCard'
+import { AIIntelligencePanel } from '@components/dashboard/AIIntelligencePanel'
 import './DashboardPage.css'
 
 const { Title } = Typography
 
 export const DashboardPage: React.FC = () => {
   const { isAuthenticated } = useAuth()
-  
+
   // Activer les alertes automatiques
   useAlerts();
 
@@ -47,31 +49,29 @@ export const DashboardPage: React.FC = () => {
     enabled: isAuthenticated, // Ne faire la requête que si authentifié
   })
 
-  // Données de graphiques (à remplacer par des appels API réels)
-  const chartColisData = [
-    { mois: 'Jan', groupage: 120, autresEnvois: 80, total: 200 },
-    { mois: 'Fév', groupage: 150, autresEnvois: 100, total: 250 },
-    { mois: 'Mar', groupage: 180, autresEnvois: 120, total: 300 },
-    { mois: 'Avr', groupage: 200, autresEnvois: 150, total: 350 },
-    { mois: 'Mai', groupage: 220, autresEnvois: 180, total: 400 },
-    { mois: 'Juin', groupage: 250, autresEnvois: 200, total: 450 },
-  ]
+  // Récupérer les données pour les graphiques
+  const { data: chartData, isLoading: chartLoading } = useQuery({
+    queryKey: ['dashboard', 'charts'],
+    queryFn: () => dashboardService.getChartData(),
+    refetchInterval: APP_CONFIG.refresh.dashboard * 2,
+    enabled: isAuthenticated,
+  })
 
-  const chartRevenusData = [
-    { mois: 'Jan', revenus: 15000000, objectif: 20000000 },
-    { mois: 'Fév', revenus: 18000000, objectif: 20000000 },
-    { mois: 'Mar', revenus: 22000000, objectif: 25000000 },
-    { mois: 'Avr', revenus: 25000000, objectif: 25000000 },
-    { mois: 'Mai', revenus: 28000000, objectif: 30000000 },
-    { mois: 'Juin', revenus: 32000000, objectif: 30000000 },
-  ]
+  // Récupérer la répartition du trafic
+  const { data: trafficData, isLoading: trafficLoading } = useQuery({
+    queryKey: ['dashboard', 'traffic'],
+    queryFn: () => dashboardService.getTrafficRepartition(),
+    refetchInterval: APP_CONFIG.refresh.dashboard * 2,
+    enabled: isAuthenticated,
+  })
 
-  const chartTraficData = [
-    { name: 'Import Aérien', value: 45 },
-    { name: 'Import Maritime', value: 30 },
-    { name: 'Export Aérien', value: 15 },
-    { name: 'Export Maritime', value: 10 },
-  ]
+  // Récupérer les recommandations IA
+  const { data: recommendations = [], isLoading: recommendationsLoading } = useQuery({
+    queryKey: ['dashboard', 'recommendations'],
+    queryFn: () => dashboardService.getAIRecommendations(),
+    refetchInterval: APP_CONFIG.refresh.dashboard * 5,
+    enabled: isAuthenticated,
+  })
 
   // Rafraîchir automatiquement toutes les données
   useEffect(() => {
@@ -111,26 +111,35 @@ export const DashboardPage: React.FC = () => {
 
       {/* GRAPHIQUES */}
       <Row gutter={[24, 24]} className="dashboard-section">
-        <Col xs={24} lg={12}>
-          <ChartColisParMois data={chartColisData} loading={statsLoading} />
+        <Col xs={24} lg={8}>
+          <PredictionCard
+            data={(chartData || []).map((d: any) => d.total)}
+            loading={chartLoading}
+          />
         </Col>
-        <Col xs={24} lg={12}>
-          <ChartRepartitionTrafic data={chartTraficData} loading={statsLoading} />
+        <Col xs={24} lg={16}>
+          <ChartRevenus data={chartData || []} loading={chartLoading} />
         </Col>
       </Row>
 
-      <WithPermission permission={PERMISSIONS.DASHBOARD.ADMIN}>
-        <Row gutter={[24, 24]} className="dashboard-section">
-          <Col xs={24}>
-            <ChartRevenus data={chartRevenusData} loading={statsLoading} />
-          </Col>
-        </Row>
-      </WithPermission>
-
-      {/* ACTIVITÉS RÉCENTES */}
       <Row gutter={[24, 24]} className="dashboard-section">
-        <Col xs={24}>
+        <Col xs={24} lg={12}>
+          <ChartColisParMois data={chartData || []} loading={chartLoading} />
+        </Col>
+        <Col xs={24} lg={12}>
+          <ChartRepartitionTrafic data={trafficData || []} loading={trafficLoading} />
+        </Col>
+      </Row>
+
+      <Row gutter={[24, 24]} className="dashboard-section">
+        <Col xs={24} xl={16}>
           <RecentActivities activities={activities || []} loading={activitiesLoading} />
+        </Col>
+        <Col xs={24} xl={8}>
+          <AIIntelligencePanel
+            recommendations={recommendations}
+            loading={recommendationsLoading}
+          />
         </Col>
       </Row>
     </div>

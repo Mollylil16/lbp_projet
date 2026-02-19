@@ -1,8 +1,8 @@
 import React from 'react'
 import { Modal, Typography, Table, Card, Row, Col, Statistic, Tag, Alert, Divider } from 'antd'
-import { 
-  ArrowUpOutlined, ArrowDownOutlined, DollarOutlined, 
-  InboxOutlined, TrophyOutlined, WarningOutlined 
+import {
+  ArrowUpOutlined, ArrowDownOutlined, DollarOutlined,
+  InboxOutlined, TrophyOutlined, WarningOutlined
 } from '@ant-design/icons'
 import { DonneesAnnuelles } from '@services/statistiques.service'
 import { formatMontantWithDevise } from '@utils/format'
@@ -62,7 +62,7 @@ export const ComparaisonMoisModal: React.FC<ComparaisonMoisModalProps> = ({
 
   // Calculer les statistiques
   const valeurs = moisData.map(d => type === 'colis' ? (d.total || 0) : (d.revenus || 0)).filter((v): v is number => typeof v === 'number')
-  
+
   if (valeurs.length === 0) {
     return null
   }
@@ -73,13 +73,13 @@ export const ComparaisonMoisModal: React.FC<ComparaisonMoisModalProps> = ({
   const minIndex = valeurs.indexOf(minValeur)
   const meilleureAnnee = maxIndex >= 0 && maxIndex < moisData.length ? moisData[maxIndex] : null
   const pireAnnee = minIndex >= 0 && minIndex < moisData.length ? moisData[minIndex] : null
-  const moyenne = valeurs.length > 0 
-    ? valeurs.reduce((sum, v) => sum + (v || 0), 0) / valeurs.length 
+  const moyenne = valeurs.length > 0
+    ? valeurs.reduce((sum, v) => sum + (v || 0), 0) / valeurs.length
     : 0
   const firstValue = valeurs[0]
   const lastValue = valeurs[valeurs.length - 1]
   const evolution = valeurs.length > 1 && firstValue !== undefined && lastValue !== undefined && firstValue > 0
-    ? ((lastValue - firstValue) / firstValue) * 100 
+    ? ((lastValue - firstValue) / firstValue) * 100
     : 0
 
   const columns = [
@@ -126,11 +126,11 @@ export const ComparaisonMoisModal: React.FC<ComparaisonMoisModalProps> = ({
         const isBest = record.annee === meilleureAnnee?.annee
         const isWorst = record.annee === pireAnnee?.annee
         return (
-          <Text strong style={{ 
+          <Text strong style={{
             color: isBest ? '#52c41a' : isWorst ? '#ff4d4f' : undefined,
-            fontSize: 16 
+            fontSize: 16
           }}>
-            {type === 'colis' 
+            {type === 'colis'
               ? `${value.toLocaleString()} colis`
               : formatMontantWithDevise(value)
             }
@@ -146,15 +146,15 @@ export const ComparaisonMoisModal: React.FC<ComparaisonMoisModalProps> = ({
         if (index === 0) return <Text type="secondary">-</Text>
         const prevRecord = moisData[index - 1]
         if (!prevRecord) return <Text type="secondary">-</Text>
-        
-        const prevValue = type === 'colis' 
+
+        const prevValue = type === 'colis'
           ? (prevRecord.total || 0)
           : (prevRecord.revenus || 0)
-        const currentValue = type === 'colis' 
+        const currentValue = type === 'colis'
           ? (record.total || 0)
           : (record.revenus || 0)
-        const evolution = prevValue > 0 
-          ? ((currentValue - prevValue) / prevValue) * 100 
+        const evolution = prevValue > 0
+          ? ((currentValue - prevValue) / prevValue) * 100
           : 0
         const isPositive = evolution >= 0
         return (
@@ -195,8 +195,8 @@ export const ComparaisonMoisModal: React.FC<ComparaisonMoisModalProps> = ({
                 prefix={type === 'colis' ? <InboxOutlined /> : <DollarOutlined />}
                 suffix={type === 'colis' ? 'colis' : ''}
                 valueStyle={{ color: '#52c41a', fontSize: 20 }}
-                formatter={(value) => type === 'colis' 
-                  ? value.toLocaleString() 
+                formatter={(value) => type === 'colis'
+                  ? value.toLocaleString()
                   : formatMontantWithDevise(Number(value))
                 }
               />
@@ -213,8 +213,8 @@ export const ComparaisonMoisModal: React.FC<ComparaisonMoisModalProps> = ({
                 prefix={type === 'colis' ? <InboxOutlined /> : <DollarOutlined />}
                 suffix={type === 'colis' ? 'colis' : ''}
                 valueStyle={{ color: '#ff4d4f', fontSize: 20 }}
-                formatter={(value) => type === 'colis' 
-                  ? value.toLocaleString() 
+                formatter={(value) => type === 'colis'
+                  ? value.toLocaleString()
                   : formatMontantWithDevise(Number(value))
                 }
               />
@@ -231,8 +231,8 @@ export const ComparaisonMoisModal: React.FC<ComparaisonMoisModalProps> = ({
                 prefix={type === 'colis' ? <InboxOutlined /> : <DollarOutlined />}
                 suffix={type === 'colis' ? 'colis' : ''}
                 valueStyle={{ fontSize: 20 }}
-                formatter={(value) => type === 'colis' 
-                  ? Math.round(Number(value)).toLocaleString() 
+                formatter={(value: any) => type === 'colis'
+                  ? Math.round(Number(value)).toLocaleString()
                   : formatMontantWithDevise(Math.round(Number(value)))
                 }
               />
@@ -262,7 +262,7 @@ export const ComparaisonMoisModal: React.FC<ComparaisonMoisModalProps> = ({
         </Card>
 
         {/* Analyse et recommandations */}
-        <Card 
+        <Card
           title={
             <div>
               <WarningOutlined style={{ color: '#1890ff', marginRight: 8 }} />
@@ -305,7 +305,7 @@ export const ComparaisonMoisModal: React.FC<ComparaisonMoisModalProps> = ({
               {meilleureAnnee && (
                 <li>
                   <Text>
-                    L'année <strong>{meilleureAnnee.annee}</strong> a été la meilleure pour {mois}. 
+                    L'année <strong>{meilleureAnnee.annee}</strong> a été la meilleure pour {mois}.
                     Analyser les facteurs de succès de cette année pour les reproduire.
                   </Text>
                 </li>
@@ -313,14 +313,14 @@ export const ComparaisonMoisModal: React.FC<ComparaisonMoisModalProps> = ({
               {pireAnnee && (
                 <li>
                   <Text>
-                    L'année <strong>{pireAnnee.annee}</strong> a été la plus faible pour {mois}. 
+                    L'année <strong>{pireAnnee.annee}</strong> a été la plus faible pour {mois}.
                     Identifier les causes de cette baisse pour éviter qu'elle ne se reproduise.
                   </Text>
                 </li>
               )}
               <li>
                 <Text>
-                  La moyenne sur toutes les années est de {type === 'colis' 
+                  La moyenne sur toutes les années est de {type === 'colis'
                     ? `${Math.round(moyenne).toLocaleString()} colis`
                     : formatMontantWithDevise(Math.round(moyenne))
                   }. Utiliser cette référence pour fixer des objectifs réalistes.

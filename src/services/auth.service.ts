@@ -11,7 +11,7 @@ class AuthService {
     // Mode mock pour le développement
     if (USE_MOCK_AUTH) {
       const mockResult = validateMockUser(credentials.username, credentials.password)
-      
+
       if (!mockResult.valid) {
         throw new Error('Nom d\'utilisateur ou mot de passe incorrect')
       }

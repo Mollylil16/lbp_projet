@@ -1,5 +1,8 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Client } from '../../clients/entities/client.entity';
+import { Tarif } from '../../tarifs/entities/tarif.entity';
+import { Agence } from '../../agences/entities/agence.entity';
+import { Expedition } from './expedition.entity';
 
 @Entity('lbp_colis')
 export class Colis {
@@ -57,8 +60,13 @@ export class Colis {
     @Column({ nullable: true })
     code_user: string;
 
-    @Column({ nullable: true })
-    id_agence: number;
+    @ManyToOne(() => Agence, (agence) => agence.colis, { nullable: true })
+    @JoinColumn({ name: 'id_agence' })
+    agence: Agence;
+
+    @ManyToOne(() => Expedition, (expedition) => expedition.colis, { nullable: true })
+    @JoinColumn({ name: 'id_expedition' })
+    expedition: Expedition;
 
     @OneToMany(() => Marchandise, (marchandise) => marchandise.colis, { cascade: true })
     marchandises: Marchandise[];
@@ -98,6 +106,16 @@ export class Marchandise {
 
     @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
     prix_agence: number;
+
+    @ManyToOne(() => Tarif, (tarif) => tarif.marchandises, { nullable: true })
+    @JoinColumn({ name: 'id_tarif' })
+    tarif: Tarif;
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+    cout_reel: number; // Snapshot du coût transporteur au moment de la création
+
+    @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+    charges_reelles: number; // Snapshot des charges fixes au moment de la création
 
     @ManyToOne(() => Colis, (colis) => colis.marchandises)
     @JoinColumn({ name: 'id_colis' })

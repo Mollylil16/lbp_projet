@@ -81,6 +81,13 @@ class RapportsService {
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
   }
+
+  /**
+   * Obtenir les finances groupées par tarif
+   */
+  async getFinancesParTarif(): Promise<any[]> {
+    return apiService.get('/rapports/finances-tarif')
+  }
 }
 
 export const rapportsService = new RapportsService()

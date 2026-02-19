@@ -54,7 +54,7 @@ const getPermissions = (formeEnvoi: "groupage" | "autres_envoi") => {
     ? PERMISSIONS.COLIS_GROUPAGE
     : PERMISSIONS.COLIS_AUTRES_ENVOIS;
 };
-import { usePermissions } from "@contexts/PermissionsContext";
+import { usePermissions } from "@hooks/usePermissions";
 import dayjs, { Dayjs } from "dayjs";
 
 const { RangePicker } = DatePicker;
@@ -98,7 +98,7 @@ export const ColisList: React.FC<ColisListProps> = ({
     setPagination({ ...pagination, page: 1 });
   };
 
-  const handleTableChange = (newPagination: any) => {
+  const handleTableChange = (newPagination: { current?: number; pageSize?: number }) => {
     setPagination({
       page: newPagination.current || 1,
       limit: newPagination.pageSize || 20,
@@ -241,7 +241,7 @@ export const ColisList: React.FC<ColisListProps> = ({
       title: t("expediteur"),
       key: "expediteur",
       width: 200,
-      render: (_, record) => record.client_colis?.nom_exp || "-",
+      render: (_: unknown, record: Colis) => record.client_colis?.nom_exp || "-",
     },
     {
       title: t("destinataire"),
@@ -277,7 +277,7 @@ export const ColisList: React.FC<ColisListProps> = ({
       key: "actions",
       fixed: "right",
       width: 150,
-      render: (_, record) => (
+      render: (_: unknown, record: Colis) => (
         <Space size="small">
           {hasPermission(colisPermissions.UPDATE) && onEdit && (
             <Tooltip title={t("modifier")}>
@@ -346,8 +346,8 @@ export const ColisList: React.FC<ColisListProps> = ({
               prefix={<SearchOutlined style={{ color: 'var(--premium-accent)' }} />}
               allowClear
               value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              onPressEnter={(e) => handleSearch(e.currentTarget.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearch(e.target.value)}
+              onPressEnter={(e: React.KeyboardEvent<HTMLInputElement>) => handleSearch(e.currentTarget.value)}
               size="large"
             />
           </Col>
@@ -377,8 +377,8 @@ export const ColisList: React.FC<ColisListProps> = ({
               style={{ width: "100%" }}
               size="large"
               value={dateRange}
-              onChange={(dates) =>
-                setDateRange(dates as [Dayjs | null, Dayjs | null])
+              onChange={(dates: [Dayjs | null, Dayjs | null] | null) =>
+                setDateRange(dates)
               }
               format="DD/MM/YYYY"
             />
@@ -452,7 +452,7 @@ export const ColisList: React.FC<ColisListProps> = ({
               pageSize: pagination.limit,
               total: data?.total || 0,
               showSizeChanger: true,
-              showTotal: (total) => t("totalColis", { total }),
+              showTotal: (total: number) => t("totalColis", { total }),
               pageSizeOptions: ["10", "20", "50", "100"],
             }}
             onChange={handleTableChange}

@@ -23,6 +23,20 @@ class DashboardService {
   async getRecentActivities(limit: number = 10): Promise<any[]> {
     return apiService.get<any[]>(`/dashboard/activities?limit=${limit}`)
   }
+
+  /**
+   * Récupérer les données pour les graphiques (IA Real-time)
+   */
+  async getChartData(): Promise<any[]> {
+    return apiService.get<any[]>('/analytics/chart-data')
+  }
+
+  /**
+   * Récupérer la répartition du trafic
+   */
+  async getTrafficRepartition(): Promise<any[]> {
+    return apiService.get<any[]>('/analytics/traffic-repartition')
+  }
 }
 
 export const dashboardService = new DashboardService()

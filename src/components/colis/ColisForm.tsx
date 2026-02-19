@@ -12,6 +12,7 @@ import {
   Divider,
   Typography,
   InputNumber,
+  AutoComplete,
 } from 'antd'
 import { PlusOutlined, DeleteOutlined, SaveOutlined } from '@ant-design/icons'
 import { useForm, Controller } from 'react-hook-form'
@@ -23,7 +24,10 @@ import { calculerTotalLigneMarchandise, calculerTotalMarchandises } from '@utils
 import { formatMontantWithDevise } from '@utils/format'
 import type { CreateColisDto } from '@types'
 import { clientsService } from '@services/clients.service'
+import { tarifsService } from '@services/tarifs.service'
 import { message } from 'antd'
+import { useAuth } from '@/hooks/useAuth'
+import { useProduitsCatalogue } from '@hooks/useProduitsCatalogue'
 
 const { Title, Text } = Typography
 const { Option } = Select
@@ -38,13 +42,14 @@ const marchandiseSchema = z.object({
   prix_emballage: z.number().min(0).optional().default(0),
   prix_assurance: z.number().min(0).optional().default(0),
   prix_agence: z.number().min(0).optional().default(0),
+  id_tarif: z.number().optional(),
 })
 
 const colisFormSchema = z.object({
   trafic_envoi: z.string().min(1, 'Le trafic d\'envoi est obligatoire'),
   date_envoi: z.string().min(1, 'La date d\'envoi est obligatoire'),
   mode_envoi: z.string().min(1, 'Le mode d\'envoi est obligatoire'),
-  
+
   // Client expéditeur
   client_colis: z.object({
     nom_exp: z.string().min(2, 'Le nom de l\'expéditeur est obligatoire'),
@@ -53,16 +58,16 @@ const colisFormSchema = z.object({
     tel_exp: z.string().min(10, 'Le téléphone est obligatoire'),
     email_exp: z.string().email('Email invalide').optional().or(z.literal('')),
   }),
-  
+
   // Marchandise (au moins une ligne)
   marchandise: z.array(marchandiseSchema).min(1, 'Au moins une ligne de marchandise est requise'),
-  
+
   // Destinataire
   nom_destinataire: z.string().min(2, 'Le nom du destinataire est obligatoire'),
   lieu_dest: z.string().min(2, 'Le lieu de destination est obligatoire'),
   tel_dest: z.string().min(10, 'Le téléphone du destinataire est obligatoire'),
   email_dest: z.string().email('Email invalide').optional().or(z.literal('')),
-  
+
   // Récupérateur (optionnel)
   nom_recup: z.string().optional(),
   adresse_recup: z.string().optional(),
@@ -87,6 +92,12 @@ export const ColisForm: React.FC<ColisFormProps> = ({
 }) => {
   const [marchandiseLines, setMarchandiseLines] = useState<number[]>([1])
   const [totalGeneral, setTotalGeneral] = useState(0)
+  const [clients, setClients] = useState<any[]>([])
+  const [tarifs, setTarifs] = useState<any[]>([])
+  const [searching, setSearching] = useState(false)
+  const { user, getCurrency } = useAuth()
+  const currency = getCurrency()
+  const { data: produitsCatalogue = [], isLoading: loadingProduits } = useProduitsCatalogue()
 
   const {
     control,
@@ -107,7 +118,21 @@ export const ColisForm: React.FC<ColisFormProps> = ({
   const marchandiseValues = watch('marchandise')
 
   useEffect(() => {
+    const fetchTarifs = async () => {
+      try {
+        const data = await tarifsService.getAll()
+        setTarifs(data)
+      } catch (error) {
+        console.error('Erreur chargement tarifs:', error)
+      }
+    }
+    fetchTarifs()
+  }, [])
+
+  useEffect(() => {
+    console.log('[ColisForm] useEffect - marchandiseValues:', marchandiseValues)
     if (!marchandiseValues || !Array.isArray(marchandiseValues)) {
+      console.log('[ColisForm] Pas de marchandises, total = 0')
       setTotalGeneral(0)
       return
     }
@@ -120,21 +145,34 @@ export const ColisForm: React.FC<ColisFormProps> = ({
       prix_agence: line?.prix_agence || 0,
     }))
 
-    setTotalGeneral(calculerTotalMarchandises(safeMarchandises))
+    console.log('[ColisForm] safeMarchandises:', safeMarchandises)
+    const total = calculerTotalMarchandises(safeMarchandises)
+    console.log('[ColisForm] Total calculé:', total)
+    setTotalGeneral(total)
   }, [marchandiseValues])
+
+  useEffect(() => {
+    if (!initialData && user?.agency) {
+      if (user.agency.code === 'LBP-PARIS') {
+        setValue('trafic_envoi', 'Colis France -> CI')
+      } else if (user.agency.code === 'LBP-DAKAR') {
+        setValue('trafic_envoi', 'Colis Sénégal -> CI')
+      }
+    }
+  }, [initialData, setValue, user])
 
   const addMarchandiseLine = () => {
     const newIndex = Math.max(...marchandiseLines) + 1
     setMarchandiseLines([...marchandiseLines, newIndex])
-    
+
     const currentMarchandise = watch('marchandise') || []
     setValue('marchandise', [
       ...currentMarchandise,
-      { 
-        nom_marchandise: '', 
-        nbre_colis: 0, 
-        nbre_articles: 0, 
-        poids_total: 0, 
+      {
+        nom_marchandise: '',
+        nbre_colis: 0,
+        nbre_articles: 0,
+        poids_total: 0,
         prix_unit: 0,
         prix_emballage: 0,
         prix_assurance: 0,
@@ -147,7 +185,7 @@ export const ColisForm: React.FC<ColisFormProps> = ({
     if (marchandiseLines.length > 1) {
       const newLines = marchandiseLines.filter((_, i) => i !== index)
       setMarchandiseLines(newLines)
-      
+
       const currentMarchandise = watch('marchandise') || []
       const newMarchandise = currentMarchandise.filter((_, i) => i !== index)
       setValue('marchandise', newMarchandise)
@@ -202,6 +240,7 @@ export const ColisForm: React.FC<ColisFormProps> = ({
           nbre_articles: m.nbre_articles,
           poids_total: m.poids_total,
           prix_unit: m.prix_unit,
+          id_tarif: m.id_tarif,
           prix_emballage: m.prix_emballage || 0,
           prix_assurance: m.prix_assurance || 0,
           prix_agence: m.prix_agence || 0,
@@ -217,6 +256,40 @@ export const ColisForm: React.FC<ColisFormProps> = ({
     } catch (e: any) {
       console.error('[ColisForm] submit error:', e)
       message.error(e?.message || 'Erreur lors de la préparation des données du colis')
+    }
+  }
+
+
+  const handleSearchClients = async (value: string) => {
+    console.log('[ColisForm] Recherche clients avec:', value)
+    if (!value || value.length < 2) {
+      console.log('[ColisForm] Recherche annulée: valeur trop courte')
+      setClients([])
+      return
+    }
+
+    try {
+      setSearching(true)
+      console.log('[ColisForm] Appel API searchClients...')
+      const results = await clientsService.searchClients(value)
+      console.log('[ColisForm] Résultats trouvés:', results.length, results)
+      setClients(results)
+    } catch (error) {
+      console.error('[ColisForm] Erreur recherche clients:', error)
+    } finally {
+      setSearching(false)
+    }
+  }
+
+
+  const handleSelectClient = (value: string, option: any) => {
+    const selectedClient = clients.find(c => c.id === option.key)
+    if (selectedClient) {
+      setValue('client_colis.nom_exp', selectedClient.nom_exp)
+      setValue('client_colis.type_piece_exp', selectedClient.type_piece_exp)
+      setValue('client_colis.num_piece_exp', selectedClient.num_piece_exp)
+      setValue('client_colis.tel_exp', selectedClient.tel_exp)
+      setValue('client_colis.email_exp', selectedClient.email_exp || '')
     }
   }
 
@@ -264,12 +337,12 @@ export const ColisForm: React.FC<ColisFormProps> = ({
                   <DatePicker
                     {...field}
                     value={field.value ? dayjs(field.value) : null}
-                    onChange={(date) => field.onChange(date ? date.format('YYYY-MM-DD') : '')}
+                    onChange={(date: any) => field.onChange(date ? date.format('YYYY-MM-DD') : '')}
                     format="DD/MM/YYYY"
                     style={{ width: '100%' }}
                     size="large"
                     minDate={dayjs()}
-                    disabledDate={(current) => current && current < dayjs().startOf('day')}
+                    disabledDate={(current: any) => current && current < dayjs().startOf('day')}
                   />
                 </Form.Item>
               )}
@@ -305,7 +378,7 @@ export const ColisForm: React.FC<ColisFormProps> = ({
       {/* SECTION 2: CLIENT EXPÉDITEUR */}
       <Card title="Informations Expéditeur" style={{ marginBottom: 16 }}>
         <Row gutter={16}>
-          <Col xs={24} md={12}>
+          <Col xs={24}>
             <Controller
               name="client_colis.nom_exp"
               control={control}
@@ -316,7 +389,31 @@ export const ColisForm: React.FC<ColisFormProps> = ({
                   validateStatus={errors.client_colis?.nom_exp ? 'error' : ''}
                   help={errors.client_colis?.nom_exp?.message}
                 >
-                  <Input {...field} placeholder="Nom complet" size="large" />
+                  <AutoComplete
+                    {...field}
+                    options={clients.map((client) => ({
+                      value: client.nom_exp,
+                      label: (
+                        <div>
+                          <strong>{client.nom_exp}</strong>
+                          <br />
+                          <small style={{ color: '#888' }}>
+                            {client.tel_exp} • {client.type_piece_exp}
+                          </small>
+                        </div>
+                      ),
+                      key: client.id,
+                    }))}
+                    onSearch={handleSearchClients}
+                    onSelect={(value: string, option: any) => {
+                      field.onChange(value)
+                      handleSelectClient(value, option)
+                    }}
+                    placeholder="Rechercher ou saisir un client"
+                    size="large"
+                    allowClear
+                    notFoundContent={searching ? 'Recherche...' : 'Aucun client trouvé'}
+                  />
                 </Form.Item>
               )}
             />
@@ -427,6 +524,55 @@ export const ColisForm: React.FC<ColisFormProps> = ({
             style={{ marginBottom: 16 }}
           >
             <Row gutter={16}>
+              {/* NOUVEAU: Sélecteur de produit du catalogue */}
+              <Col xs={24} md={12}>
+                <Form.Item label="Produit du catalogue (optionnel)" help="Sélectionnez un produit pour remplir automatiquement le nom et le prix">
+                  <Select
+                    placeholder="Rechercher un produit..."
+                    size="large"
+                    allowClear
+                    showSearch
+                    loading={loadingProduits}
+                    filterOption={(input, option) =>
+                      (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
+                    }
+                    onChange={(produitId: number) => {
+                      if (produitId) {
+                        const produit = produitsCatalogue.find(p => p.id === produitId)
+                        if (produit) {
+                          // Auto-remplir le nom
+                          setValue(`marchandise.${index}.nom_marchandise`, produit.nom)
+
+                          // Auto-remplir le prix selon la nature du produit
+                          let prix = 0
+                          if (produit.nature === 'PRIX_UNITAIRE' && produit.prix_unitaire) {
+                            prix = produit.prix_unitaire
+                          } else if (produit.nature === 'PRIX_FORFAITAIRE' && produit.prix_forfaitaire) {
+                            prix = produit.prix_forfaitaire
+                          }
+
+                          if (prix > 0) {
+                            setValue(`marchandise.${index}.prix_unit`, prix)
+                            message.success(`Produit "${produit.nom}" sélectionné - Prix: ${prix} ${produit.devise}`)
+                          }
+                        }
+                      }
+                    }}
+                    options={produitsCatalogue
+                      .filter(p => p.actif)
+                      .map(p => {
+                        const prix = p.prix_unitaire || p.prix_forfaitaire || 0
+                        const devise = p.devise || 'FCFA'
+                        return {
+                          value: p.id,
+                          label: `${p.nom} (${prix} ${devise})`,
+                          searchText: `${p.nom} ${p.categorie}`.toLowerCase(),
+                        }
+                      })}
+                  />
+                </Form.Item>
+              </Col>
+
               <Col xs={24}>
                 <Controller
                   name={`marchandise.${index}.nom_marchandise`}
@@ -458,7 +604,7 @@ export const ColisForm: React.FC<ColisFormProps> = ({
                       <InputNumber
                         {...field}
                         value={field.value}
-                        onChange={(value) => field.onChange(value || 0)}
+                        onChange={(value: number | null) => field.onChange(value || 0)}
                         min={1}
                         style={{ width: '100%' }}
                         size="large"
@@ -482,7 +628,7 @@ export const ColisForm: React.FC<ColisFormProps> = ({
                       <InputNumber
                         {...field}
                         value={field.value}
-                        onChange={(value) => field.onChange(value || 0)}
+                        onChange={(value: number | null) => field.onChange(value || 0)}
                         min={1}
                         style={{ width: '100%' }}
                         size="large"
@@ -492,7 +638,39 @@ export const ColisForm: React.FC<ColisFormProps> = ({
                 />
               </Col>
 
-              <Col xs={24} sm={6}>
+              <Col xs={24} sm={8}>
+                <Controller
+                  name={`marchandise.${index}.id_tarif`}
+                  control={control}
+                  render={({ field }) => (
+                    <Form.Item label="Tarif / Type d'envoi">
+                      <Select
+                        {...field}
+                        placeholder="Sélectionner un tarif"
+                        size="large"
+                        allowClear
+                        onChange={(val: any) => {
+                          field.onChange(val)
+                          if (val) {
+                            const selected = tarifs.find((t) => t.id === val)
+                            if (selected) {
+                              setValue(`marchandise.${index}.prix_unit`, Number(selected.prix_vente_conseille))
+                            }
+                          }
+                        }}
+                      >
+                        {tarifs.map((t) => (
+                          <Option key={t.id} value={t.id}>
+                            {t.nom} ({t.prix_vente_conseille} FCFA)
+                          </Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  )}
+                />
+              </Col>
+
+              <Col xs={24} sm={8}>
                 <Controller
                   name={`marchandise.${index}.poids_total`}
                   control={control}
@@ -506,7 +684,7 @@ export const ColisForm: React.FC<ColisFormProps> = ({
                       <InputNumber
                         {...field}
                         value={field.value}
-                        onChange={(value) => field.onChange(value || 0)}
+                        onChange={(value: number | null) => field.onChange(value || 0)}
                         min={0.01}
                         step={0.01}
                         style={{ width: '100%' }}
@@ -517,13 +695,13 @@ export const ColisForm: React.FC<ColisFormProps> = ({
                 />
               </Col>
 
-              <Col xs={24} sm={6}>
+              <Col xs={24} sm={8}>
                 <Controller
                   name={`marchandise.${index}.prix_unit`}
                   control={control}
                   render={({ field }) => (
                     <Form.Item
-                      label="Prix unitaire"
+                      label={`Prix unitaire (${currency})`}
                       required
                       validateStatus={errors.marchandise?.[index]?.prix_unit ? 'error' : ''}
                       help={errors.marchandise?.[index]?.prix_unit?.message}
@@ -531,7 +709,7 @@ export const ColisForm: React.FC<ColisFormProps> = ({
                       <InputNumber
                         {...field}
                         value={field.value}
-                        onChange={(value) => field.onChange(value || 0)}
+                        onChange={(value: number | null) => field.onChange(value || 0)}
                         min={0}
                         style={{ width: '100%' }}
                         size="large"
@@ -546,11 +724,11 @@ export const ColisForm: React.FC<ColisFormProps> = ({
                   name={`marchandise.${index}.prix_emballage`}
                   control={control}
                   render={({ field }) => (
-                    <Form.Item label="Prix emballage (optionnel)">
+                    <Form.Item label={`Prix emballage (${currency})`}>
                       <InputNumber
                         {...field}
                         value={field.value || 0}
-                        onChange={(value) => field.onChange(value || 0)}
+                        onChange={(value: number | null) => field.onChange(value || 0)}
                         min={0}
                         style={{ width: '100%' }}
                         size="large"
@@ -565,11 +743,11 @@ export const ColisForm: React.FC<ColisFormProps> = ({
                   name={`marchandise.${index}.prix_assurance`}
                   control={control}
                   render={({ field }) => (
-                    <Form.Item label="Prix assurance (optionnel)">
+                    <Form.Item label={`Prix assurance (${currency})`}>
                       <InputNumber
                         {...field}
                         value={field.value || 0}
-                        onChange={(value) => field.onChange(value || 0)}
+                        onChange={(value: number | null) => field.onChange(value || 0)}
                         min={0}
                         style={{ width: '100%' }}
                         size="large"
@@ -589,7 +767,7 @@ export const ColisForm: React.FC<ColisFormProps> = ({
                         <InputNumber
                           {...field}
                           value={field.value || 0}
-                          onChange={(value) => field.onChange(value || 0)}
+                          onChange={(value: number | null) => field.onChange(value || 0)}
                           min={0}
                           style={{ width: '100%' }}
                           size="large"
@@ -610,7 +788,8 @@ export const ColisForm: React.FC<ColisFormProps> = ({
                       watch(`marchandise.${index}.prix_emballage`) || 0,
                       watch(`marchandise.${index}.prix_assurance`) || 0,
                       watch(`marchandise.${index}.prix_agence`) || 0
-                    )
+                    ),
+                    currency
                   )}
                 </Text>
               </Col>
@@ -621,7 +800,18 @@ export const ColisForm: React.FC<ColisFormProps> = ({
         <Divider />
         <div style={{ textAlign: 'right', paddingTop: 16 }}>
           <Title level={4}>
-            Total Général: {formatMontantWithDevise(totalGeneral)}
+            Total Général: {formatMontantWithDevise(
+              marchandiseLines.reduce((total, _, index) => {
+                return total + calculerTotalLigneMarchandise(
+                  watch(`marchandise.${index}.prix_unit`) || 0,
+                  watch(`marchandise.${index}.nbre_colis`) || 0,
+                  watch(`marchandise.${index}.prix_emballage`) || 0,
+                  watch(`marchandise.${index}.prix_assurance`) || 0,
+                  watch(`marchandise.${index}.prix_agence`) || 0
+                )
+              }, 0),
+              currency
+            )}
           </Title>
         </div>
       </Card>

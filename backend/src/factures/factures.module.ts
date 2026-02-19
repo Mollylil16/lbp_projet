@@ -4,9 +4,10 @@ import { FacturesService } from './factures.service';
 import { FacturesController } from './factures.controller';
 import { Facture } from './entities/facture.entity';
 import { Colis } from '../colis/entities/colis.entity';
+import { LienPaiement } from '../paiements/entities/lien-paiement.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Facture, Colis])],
+  imports: [TypeOrmModule.forFeature([Facture, Colis, LienPaiement])],
   providers: [FacturesService],
   controllers: [FacturesController],
   exports: [FacturesService, TypeOrmModule],

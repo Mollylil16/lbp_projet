@@ -1,130 +1,51 @@
 import React from 'react'
-import { Alert, List, Typography, Tag, Space } from 'antd'
-import { 
-  CheckCircleOutlined, 
-  WarningOutlined, 
+import { Alert, List, Typography, Space, Spin, Empty } from 'antd'
+import {
+  CheckCircleOutlined,
+  WarningOutlined,
   InfoCircleOutlined,
-  TrophyOutlined,
-  CalendarOutlined 
+  ExclamationCircleOutlined,
+  RobotOutlined,
 } from '@ant-design/icons'
-import { DonneesAnnuelles, TendancesMensuelles } from '@services/statistiques.service'
+import { useQuery } from '@tanstack/react-query'
+import { statistiquesService } from '@services/statistiques.service'
 
-interface RecommandationsHistoriquesProps {
-  historiqueData: DonneesAnnuelles[]
-  tendancesData?: TendancesMensuelles[]
-}
+const { Text, Paragraph } = Typography
 
-const { Title, Text, Paragraph } = Typography
-
-export const RecommandationsHistoriques: React.FC<RecommandationsHistoriquesProps> = ({
-  historiqueData,
-  tendancesData,
-}) => {
-  const recommendations: Array<{
-    type: 'success' | 'warning' | 'info'
-    title: string
-    description: string
-    action?: string
-  }> = []
-
-  // Analyser les données pour générer des recommandations
-  if (historiqueData.length >= 2) {
-    const currentYear = historiqueData[historiqueData.length - 1]
-    const previousYear = historiqueData[historiqueData.length - 2]
-
-    const evolutionColis = ((currentYear.totalColis - previousYear.totalColis) / previousYear.totalColis) * 100
-
-    // Recommandation basée sur l'évolution
-    if (evolutionColis > 10) {
-      recommendations.push({
-        type: 'success',
-        title: 'Croissance positive détectée',
-        description: `Votre activité a augmenté de ${evolutionColis.toFixed(1)}% par rapport à l'année précédente. Continuez sur cette lancée !`,
-        action: 'Maintenir les stratégies qui fonctionnent et investir dans les secteurs en croissance.',
-      })
-    } else if (evolutionColis < -10) {
-      recommendations.push({
-        type: 'warning',
-        title: 'Baisse significative détectée',
-        description: `Votre activité a diminué de ${Math.abs(evolutionColis).toFixed(1)}% par rapport à l'année précédente.`,
-        action: 'Analyser les causes de la baisse et mettre en place des actions correctives.',
-      })
-    }
-
-    // Identifier les meilleurs et pires mois
-    if (tendancesData) {
-      const meilleursMois = tendancesData
-        .filter(t => t.tendance === 'hausse')
-        .sort((a, b) => b.evolution - a.evolution)
-        .slice(0, 3)
-
-      const piresMois = tendancesData
-        .filter(t => t.tendance === 'baisse')
-        .sort((a, b) => a.evolution - b.evolution)
-        .slice(0, 3)
-
-      if (meilleursMois.length > 0) {
-        recommendations.push({
-          type: 'info',
-          title: 'Mois les plus performants',
-          description: `Les mois ${meilleursMois.map(m => m.mois).join(', ')} montrent une tendance à la hausse.`,
-          action: `Renforcer les actions marketing et opérationnelles pendant ces périodes pour maximiser les résultats.`,
-        })
-      }
-
-      if (piresMois.length > 0) {
-        recommendations.push({
-          type: 'warning',
-          title: 'Mois à surveiller',
-          description: `Les mois ${piresMois.map(m => m.mois).join(', ')} montrent une tendance à la baisse.`,
-          action: `Développer des stratégies spécifiques pour ces périodes (promotions, campagnes ciblées, etc.).`,
-        })
-      }
-    }
-
-    // Recommandation sur la moyenne mensuelle
-    const moyenneActuelle = currentYear.moyenneMensuelle
-    const moyennePrecedente = previousYear.moyenneMensuelle
-    const evolutionMoyenne = ((moyenneActuelle - moyennePrecedente) / moyennePrecedente) * 100
-
-    if (evolutionMoyenne > 5) {
-      recommendations.push({
-        type: 'success',
-        title: 'Performance mensuelle en amélioration',
-        description: `La moyenne mensuelle a augmenté de ${evolutionMoyenne.toFixed(1)}%.`,
-        action: 'Cette amélioration constante est un bon signe. Maintenez cette dynamique.',
-      })
-    }
-  }
-
-  // Recommandations générales
-  recommendations.push({
-    type: 'info',
-    title: 'Planification stratégique',
-    description: 'Utilisez ces données pour planifier vos ressources et vos objectifs pour l\'année à venir.',
-    action: 'Établir des objectifs réalistes basés sur les tendances historiques et prévoir des actions correctives pour les mois difficiles.',
+export const RecommandationsHistoriques: React.FC = () => {
+  // Récupérer les recommandations dynamiques depuis le backend
+  const { data: recommendations, isLoading } = useQuery({
+    queryKey: ['ai-recommendations'],
+    queryFn: () => statistiquesService.getAIRecommendations(),
+    refetchInterval: 300000, // Toutes les 5 minutes
   })
 
   const getIcon = (type: string) => {
     switch (type) {
       case 'success':
-        return <CheckCircleOutlined />
+        return <CheckCircleOutlined style={{ color: '#52c41a' }} />
       case 'warning':
-        return <WarningOutlined />
+        return <WarningOutlined style={{ color: '#faad14' }} />
+      case 'error':
+        return <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />
       default:
-        return <InfoCircleOutlined />
+        return <InfoCircleOutlined style={{ color: '#1890ff' }} />
     }
   }
 
+  if (isLoading) return <div style={{ textAlign: 'center', padding: 20 }}><Spin tip="L'IA analyse vos données..." /></div>
+
   return (
     <div>
-      {recommendations.length > 0 ? (
+      {!recommendations || recommendations.length === 0 ? (
+        <Empty description="Aucune recommandation pour le moment." />
+      ) : (
         <List
           dataSource={recommendations}
-          renderItem={(item) => (
+          renderItem={(item: any) => (
             <List.Item>
               <Alert
-                type={item.type}
+                type={item.type === 'error' ? 'error' : item.type}
                 message={
                   <Space>
                     {getIcon(item.type)}
@@ -133,30 +54,31 @@ export const RecommandationsHistoriques: React.FC<RecommandationsHistoriquesProp
                 }
                 description={
                   <div>
-                    <Paragraph style={{ marginBottom: 8 }}>{item.description}</Paragraph>
-                    {item.action && (
-                      <div style={{ marginTop: 8, paddingLeft: 24 }}>
-                        <Text type="secondary" italic>
-                          💡 {item.action}
-                        </Text>
-                      </div>
-                    )}
+                    <Paragraph style={{ marginBottom: 8, fontWeight: 500 }}>
+                      {item.description}
+                    </Paragraph>
+
+                    <div style={{ marginTop: 8, paddingLeft: 12, borderLeft: '3px solid #eee' }}>
+                      <Text type="secondary" strong>🔍 Cause identifiée :</Text>
+                      <Paragraph style={{ marginBottom: 4 }}>{item.cause}</Paragraph>
+
+                      <Text type="success" strong>💡 Action recommandée :</Text>
+                      <Paragraph style={{ italic: true }}>{item.action}</Paragraph>
+                    </div>
                   </div>
                 }
                 showIcon={false}
-                style={{ width: '100%' }}
+                style={{ width: '100%', borderRadius: 8 }}
               />
             </List.Item>
           )}
         />
-      ) : (
-        <Alert
-          message="Aucune recommandation disponible"
-          description="Sélectionnez au moins deux années pour obtenir des recommandations basées sur la comparaison."
-          type="info"
-          showIcon
-        />
       )}
+      <div style={{ marginTop: 16, textAlign: 'right' }}>
+        <Text type="secondary" style={{ fontSize: 11 }}>
+          <RobotOutlined /> Analyses basées sur vos flux réels de caisse et logistique.
+        </Text>
+      </div>
     </div>
   )
 }

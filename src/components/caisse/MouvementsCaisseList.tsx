@@ -79,7 +79,7 @@ export const MouvementsCaisseList: React.FC<MouvementsCaisseListProps> = ({
       key: "date",
       width: 120,
       render: (date: string) => dayjs(date).format("DD/MM/YYYY"),
-      sorter: (a, b) => dayjs(a.date).unix() - dayjs(b.date).unix(),
+      sorter: (a: MouvementCaisse, b: MouvementCaisse) => dayjs(a.date).unix() - dayjs(b.date).unix(),
     },
     {
       title: "Type",
@@ -112,7 +112,7 @@ export const MouvementsCaisseList: React.FC<MouvementsCaisseListProps> = ({
         { text: "Entrée - Espèce", value: "ENTREE_ESPECE" },
         { text: "Entrée - Virement", value: "ENTREE_VIREMENT" },
       ],
-      onFilter: (value, record) => record.type === value,
+      onFilter: (value: any, record: MouvementCaisse) => record.type === value,
     },
     {
       title: "Libellé",
@@ -138,7 +138,7 @@ export const MouvementsCaisseList: React.FC<MouvementsCaisseListProps> = ({
       key: "montant",
       width: 150,
       align: "right",
-      render: (montant: number, record) => (
+      render: (montant: number, record: MouvementCaisse) => (
         <span
           style={{
             color: record.type === "DECAISSEMENT" ? "#ff4d4f" : "#52c41a",
@@ -149,7 +149,7 @@ export const MouvementsCaisseList: React.FC<MouvementsCaisseListProps> = ({
           {formatMontantWithDevise(montant)}
         </span>
       ),
-      sorter: (a, b) => a.montant - b.montant,
+      sorter: (a: MouvementCaisse, b: MouvementCaisse) => a.montant - b.montant,
     },
     {
       title: "Solde",
@@ -162,14 +162,14 @@ export const MouvementsCaisseList: React.FC<MouvementsCaisseListProps> = ({
           {formatMontantWithDevise(solde || 0)}
         </span>
       ),
-      sorter: (a, b) => (a.solde || 0) - (b.solde || 0),
+      sorter: (a: MouvementCaisse, b: MouvementCaisse) => (a.solde || 0) - (b.solde || 0),
     },
     {
       title: "Actions",
       key: "actions",
       width: 120,
       fixed: "right",
-      render: (_, record) => (
+      render: (_: any, record: MouvementCaisse) => (
         <Space>
           {onEdit && (
             <Button
@@ -286,7 +286,7 @@ export const MouvementsCaisseList: React.FC<MouvementsCaisseListProps> = ({
           pagination={{
             pageSize: 20,
             showSizeChanger: true,
-            showTotal: (total) => `Total: ${total}`,
+            showTotal: (total: number) => `Total: ${total}`,
           }}
           scroll={{ x: 1200 }}
         />

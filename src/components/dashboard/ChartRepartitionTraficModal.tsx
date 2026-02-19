@@ -36,7 +36,7 @@ export const ChartRepartitionTraficModal: React.FC<ChartRepartitionTraficModalPr
   const [exporting, setExporting] = useState(false)
   const chartRef = useRef<HTMLDivElement>(null)
   const total = data.reduce((sum, item) => sum + item.value, 0)
-  
+
   const tableData = data.map((item, index) => ({
     key: index,
     ...item,
@@ -107,8 +107,8 @@ export const ChartRepartitionTraficModal: React.FC<ChartRepartitionTraficModalPr
       width: 150,
       render: (value: number) => (
         <div>
-          <Progress 
-            percent={value} 
+          <Progress
+            percent={value}
             strokeColor={COLORS[tableData.findIndex(d => d.value === value) % COLORS.length]}
             size="small"
             format={() => `${value}%`}
@@ -155,16 +155,16 @@ export const ChartRepartitionTraficModal: React.FC<ChartRepartitionTraficModalPr
       footer={
         <Space>
           <Button onClick={onClose}>Fermer</Button>
-          <Button 
-            icon={<FilePdfOutlined />} 
+          <Button
+            icon={<FilePdfOutlined />}
             onClick={handleExportPDF}
             loading={exporting}
           >
             Exporter PDF
           </Button>
-          <Button 
+          <Button
             type="primary"
-            icon={<FileExcelOutlined />} 
+            icon={<FileExcelOutlined />}
             onClick={handleExportExcel}
             loading={exporting}
           >
@@ -179,28 +179,28 @@ export const ChartRepartitionTraficModal: React.FC<ChartRepartitionTraficModalPr
         <Card title="Graphique Détaillé" style={{ marginBottom: 24 }}>
           <div ref={chartRef}>
             <ResponsiveContainer width="100%" height={400}>
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={150}
-                innerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-                stroke="#ffffff"
-                strokeWidth={3}
-              >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+              <PieChart>
+                <Pie
+                  data={data}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={150}
+                  innerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                  stroke="#ffffff"
+                  strokeWidth={3}
+                >
+                  {data.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
         </Card>
 
@@ -212,7 +212,7 @@ export const ChartRepartitionTraficModal: React.FC<ChartRepartitionTraficModalPr
             pagination={false}
             size="small"
           />
-          
+
           <Row gutter={16} style={{ marginTop: 24 }}>
             <Col xs={24} sm={12}>
               <Card>
@@ -229,7 +229,7 @@ export const ChartRepartitionTraficModal: React.FC<ChartRepartitionTraficModalPr
                   title="Revenus Totaux Estimés"
                   value={tableData.reduce((sum, item) => sum + item.revenusEstimes, 0)}
                   prefix={<DollarOutlined />}
-                  formatter={(value) => formatMontantWithDevise(Number(value))}
+                  formatter={(value: any) => formatMontantWithDevise(Number(value))}
                 />
               </Card>
             </Col>
@@ -244,8 +244,8 @@ export const ChartRepartitionTraficModal: React.FC<ChartRepartitionTraficModalPr
                 return (
                   <li key={index} style={{ marginBottom: 8 }}>
                     <Text>
-                      <Tag color="orange">Faible</Tag> Le trafic <strong>{item.name}</strong> représente 
-                      seulement {item.value}%. Considérer des actions marketing ciblées pour augmenter 
+                      <Tag color="orange">Faible</Tag> Le trafic <strong>{item.name}</strong> représente
+                      seulement {item.value}%. Considérer des actions marketing ciblées pour augmenter
                       ce segment.
                     </Text>
                   </li>
@@ -255,8 +255,8 @@ export const ChartRepartitionTraficModal: React.FC<ChartRepartitionTraficModalPr
                 return (
                   <li key={index} style={{ marginBottom: 8 }}>
                     <Text>
-                      <Tag color="green">Dominant</Tag> Le trafic <strong>{item.name}</strong> est 
-                      le segment principal ({item.value}%). Maintenir la qualité de service pour 
+                      <Tag color="green">Dominant</Tag> Le trafic <strong>{item.name}</strong> est
+                      le segment principal ({item.value}%). Maintenir la qualité de service pour
                       conserver cette position.
                     </Text>
                   </li>

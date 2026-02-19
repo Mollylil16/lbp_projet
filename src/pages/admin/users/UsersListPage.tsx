@@ -43,14 +43,15 @@ export const UsersListPage: React.FC = () => {
   const [isCreateMode, setIsCreateMode] = useState(false);
 
   // Récupérer les utilisateurs depuis l'API
-  const { data: users = [], isLoading, refetch } = useQuery({
+  const { data: users, isLoading, error, refetch } = useQuery<User[]>({
     queryKey: ['users'],
     queryFn: () => usersService.getAll(),
-    onError: (error: any) => {
-      message.error('Erreur lors du chargement des utilisateurs');
-      console.error('Error loading users:', error);
-    },
   });
+
+  if (error) {
+    message.error('Erreur lors du chargement des utilisateurs');
+    console.error('Error loading users:', error);
+  }
 
   const columns: ColumnsType<User> = [
     {
@@ -75,7 +76,7 @@ export const UsersListPage: React.FC = () => {
       title: "Rôle",
       key: "role",
       width: 150,
-      render: (_, record) => (
+      render: (_: any, record: User) => (
         <Tag color={record.role.code === "SUPER_ADMIN" ? "red" : "blue"}>
           {record.role.name}
         </Tag>
@@ -104,7 +105,7 @@ export const UsersListPage: React.FC = () => {
       key: "actions",
       fixed: "right",
       width: 150,
-      render: (_, record) => (
+      render: (_: any, record: User) => (
         <Space size="small">
           <WithPermission permission={PERMISSIONS.USERS.UPDATE}>
             <Tooltip title="Modifier">
@@ -155,15 +156,15 @@ export const UsersListPage: React.FC = () => {
               prefix={<SearchOutlined />}
               allowClear
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
               size="large"
             />
           </Col>
 
           <Col xs={24} sm={8} md={12} style={{ textAlign: "right" }}>
             <Space>
-              <Button 
-                icon={<ReloadOutlined />} 
+              <Button
+                icon={<ReloadOutlined />}
                 size="large"
                 onClick={() => refetch()}
                 loading={isLoading}
@@ -194,7 +195,7 @@ export const UsersListPage: React.FC = () => {
       <Card>
         <Table
           columns={columns}
-          dataSource={users.filter((user) => {
+          dataSource={users?.filter((user) => {
             if (!searchTerm) return true;
             const search = searchTerm.toLowerCase();
             return (
@@ -202,14 +203,14 @@ export const UsersListPage: React.FC = () => {
               user.full_name.toLowerCase().includes(search) ||
               (user.email && user.email.toLowerCase().includes(search))
             );
-          })}
+          }) || []}
           rowKey="id"
           scroll={{ x: 1000 }}
           loading={isLoading}
           pagination={{
             pageSize: 20,
             showSizeChanger: true,
-            showTotal: (total) => `Total: ${total} utilisateurs`,
+            showTotal: (total: number) => `Total: ${total} utilisateurs`,
           }}
         />
       </Card>
@@ -278,7 +279,7 @@ const UserForm: React.FC<UserFormProps> = ({
           placeholder="Nom d'utilisateur"
           prefix={<UserOutlined />}
           value={formData.username}
-          onChange={(e) =>
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setFormData({ ...formData, username: e.target.value })
           }
           size="large"
@@ -286,7 +287,7 @@ const UserForm: React.FC<UserFormProps> = ({
         <Input
           placeholder="Nom complet"
           value={formData.full_name}
-          onChange={(e) =>
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             setFormData({ ...formData, full_name: e.target.value })
           }
           size="large"
@@ -295,19 +296,19 @@ const UserForm: React.FC<UserFormProps> = ({
           placeholder="Email"
           type="email"
           value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, email: e.target.value })}
           size="large"
         />
         <Input
           placeholder="Téléphone"
           value={formData.phone}
-          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, phone: e.target.value })}
           size="large"
         />
         <Select
           placeholder="Rôle"
           value={formData.role}
-          onChange={(value) => setFormData({ ...formData, role: value })}
+          onChange={(value: string) => setFormData({ ...formData, role: value })}
           style={{ width: "100%" }}
           size="large"
         >
@@ -321,7 +322,7 @@ const UserForm: React.FC<UserFormProps> = ({
           <span>Statut: </span>
           <Switch
             checked={formData.status === "active"}
-            onChange={(checked) =>
+            onChange={(checked: boolean) =>
               setFormData({
                 ...formData,
                 status: checked ? "active" : "inactive",

@@ -7,6 +7,8 @@ export enum PaymentMode {
     QUARANTE_CINQ_JOURS = '45j',
     SOIXANTE_JOURS = '60j',
     QUATRE_VINGT_DIX_JOURS = '90j',
+    ORANGE_MONEY = 'orange_money',
+    WAVE = 'wave',
 }
 
 @Entity('lbp_paiements')

@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Colis, Marchandise } from './entities/colis.entity';
 import { CreateColisDto } from './dto/create-colis.dto';
 import { Client } from '../clients/entities/client.entity';
 import { FacturesService } from '../factures/factures.service';
+import { TarifsService } from '../tarifs/tarifs.service';
+import { Tarif } from '../tarifs/entities/tarif.entity';
 
 @Injectable()
 export class ColisService {
@@ -16,6 +18,7 @@ export class ColisService {
         @InjectRepository(Client)
         private clientRepository: Repository<Client>,
         private facturesService: FacturesService,
+        private tarifsService: TarifsService,
         private dataSource: DataSource,
     ) { }
 
@@ -42,21 +45,38 @@ export class ColisService {
                 ref_colis: refColis,
                 client,
                 code_user: userId,
-                id_agence: agenceId,
+                agence: agenceId ? ({ id: agenceId } as any) : undefined,
                 date_envoi: new Date(createColisDto.date_envoi),
             });
 
             const savedColis = await queryRunner.manager.save(colis);
 
-            // 4. Create Marchandises
+            // 4. Create Marchandises with financial snapshots
             if (marchandises && marchandises.length > 0) {
-                const marchandiseEntities = marchandises.map((m) =>
-                    this.marchandiseRepository.create({
+                const marchandiseEntities: Marchandise[] = [];
+                for (const m of marchandises) {
+                    let cout_reel = 0;
+                    let charges_reelles = 0;
+                    let tarifEntity: Tarif | undefined = undefined;
+
+                    if (m.id_tarif) {
+                        tarifEntity = await this.tarifsService.findOne(m.id_tarif);
+                        if (tarifEntity) {
+                            cout_reel = Number(tarifEntity.cout_transport_kg || 0) * Number(m.poids_total || 0);
+                            charges_reelles = Number(tarifEntity.charges_fixes_unit || 0) * Number(m.nbre_colis || 0);
+                        }
+                    }
+
+                    const marchandise: any = this.marchandiseRepository.create({
                         ...m,
                         colis: savedColis,
-                    }),
-                );
-                await queryRunner.manager.save(marchandiseEntities);
+                        tarif: tarifEntity,
+                        cout_reel: cout_reel,
+                        charges_reelles: charges_reelles,
+                    } as any);
+                    marchandiseEntities.push(marchandise);
+                }
+                await queryRunner.manager.save(Marchandise, marchandiseEntities);
                 savedColis.marchandises = marchandiseEntities;
             }
 
@@ -130,22 +150,39 @@ export class ColisService {
 
             colis.code_user = userId;
             if (typeof agenceId !== 'undefined') {
-                colis.id_agence = agenceId;
+                colis.agence = agenceId ? ({ id: agenceId } as any) : null;
             }
 
             const savedColis = await queryRunner.manager.save(colis);
 
-            // 4. Supprimer les anciennes marchandises et recréer à partir du DTO
+            // 4. Supprimer les anciennes marchandises et recréer à partir du DTO avec snapshots
             await queryRunner.manager.delete(Marchandise, { colis: { id: savedColis.id } as any });
 
             if (marchandises && marchandises.length > 0) {
-                const marchandiseEntities = marchandises.map((m) =>
-                    this.marchandiseRepository.create({
+                const marchandiseEntities: Marchandise[] = [];
+                for (const m of marchandises) {
+                    let cout_reel = 0;
+                    let charges_reelles = 0;
+                    let tarifEntity: Tarif | undefined = undefined;
+
+                    if (m.id_tarif) {
+                        tarifEntity = await this.tarifsService.findOne(m.id_tarif);
+                        if (tarifEntity) {
+                            cout_reel = Number(tarifEntity.cout_transport_kg || 0) * Number(m.poids_total || 0);
+                            charges_reelles = Number(tarifEntity.charges_fixes_unit || 0) * Number(m.nbre_colis || 0);
+                        }
+                    }
+
+                    const marchandise: any = this.marchandiseRepository.create({
                         ...m,
                         colis: savedColis,
-                    }),
-                );
-                await queryRunner.manager.save(marchandiseEntities);
+                        tarif: tarifEntity,
+                        cout_reel: cout_reel,
+                        charges_reelles: charges_reelles,
+                    } as any);
+                    marchandiseEntities.push(marchandise);
+                }
+                await queryRunner.manager.save(Marchandise, marchandiseEntities);
                 savedColis.marchandises = marchandiseEntities;
             } else {
                 savedColis.marchandises = [];
@@ -186,10 +223,17 @@ export class ColisService {
         return `LBP-${datePart}-${numPart}`;
     }
 
-    async findAll(query: any): Promise<Colis[]> {
+    async findAll(query: any, agenceId?: number): Promise<Colis[]> {
+        const where: any = {};
+        if (agenceId) {
+            where.agence = { id: agenceId };
+        }
         return this.colisRepository.find({
+            where,
             relations: ['client', 'marchandises'],
             order: { created_at: 'DESC' },
+            ...(query.limit ? { take: query.limit } : {}),
+            ...(query.page && query.limit ? { skip: (query.page - 1) * query.limit } : {}),
         });
     }
 
@@ -210,7 +254,7 @@ export class ColisService {
         return await this.colisRepository.save(colis);
     }
 
-    async searchColis(searchTerm: string, formeEnvoi?: string): Promise<Colis[]> {
+    async searchColis(searchTerm: string, formeEnvoi?: string, agenceId?: number): Promise<Colis[]> {
         const query = this.colisRepository.createQueryBuilder('colis')
             .leftJoinAndSelect('colis.client', 'client')
             .leftJoinAndSelect('colis.marchandises', 'marchandises')
@@ -218,6 +262,10 @@ export class ColisService {
 
         if (formeEnvoi) {
             query.andWhere('colis.forme_envoi = :formeEnvoi', { formeEnvoi });
+        }
+
+        if (agenceId) {
+            query.andWhere('colis.id_agence = :agenceId', { agenceId });
         }
 
         return await query.getMany();
@@ -242,13 +290,51 @@ export class ColisService {
             steps.push({ title: 'Colis validé et prêt pour expédition', date: colis.updated_at, location: 'Entrepôt LBP' });
         }
 
+        // ✅ AJOUT: Vérifier le statut du paiement
+        const facture = await this.dataSource
+            .getRepository('Facture')
+            .findOne({ where: { colis: { id: colis.id } } });
+
+        const paymentStatus = facture
+            ? (Number(facture.montant_paye) >= Number(facture.montant_ttc) ? 'Payé' : 'En attente')
+            : 'Non facturé';
+
         return {
             ref_colis: colis.ref_colis,
             status: colis.etat_validation === 1 ? 'En cours' : 'Brouillon',
+            payment_status: paymentStatus,
             current_location: 'Agence LBP',
             steps,
             client_colis: colis.client,
             colis,
         };
+    }
+
+    /**
+     * ✅ AJOUT: Supprimer un colis avec vérifications
+     */
+    async remove(id: number, user: any): Promise<void> {
+        const colis = await this.findOne(id);
+
+        // Vérifier si le colis a déjà une facture
+        const facture = await this.dataSource
+            .getRepository('Facture')
+            .findOne({ where: { colis: { id } } });
+
+        if (facture) {
+            throw new BadRequestException(
+                'Impossible de supprimer ce colis car il possède déjà une facture. Veuillez d\'abord supprimer la facture.'
+            );
+        }
+
+        // Vérifier si le colis est validé
+        if (colis.etat_validation === 1) {
+            throw new BadRequestException(
+                'Impossible de supprimer un colis validé. Veuillez le dé-valider d\'abord.'
+            );
+        }
+
+        // Supprimer le colis (les marchandises seront supprimées en cascade)
+        await this.colisRepository.delete(id);
     }
 }

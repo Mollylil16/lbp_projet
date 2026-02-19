@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Modal, Typography, Table, Tag, Card, Row, Col, Statistic, Timeline, Alert, Button, Space, message } from 'antd'
-import { 
+import {
   ArrowUpOutlined, ArrowDownOutlined, DollarOutlined,
   CheckCircleOutlined, WarningOutlined, InfoCircleOutlined, FilePdfOutlined, FileExcelOutlined
 } from '@ant-design/icons'
@@ -168,16 +168,16 @@ export const PointCaisseModal: React.FC<PointCaisseModalProps> = ({
       footer={
         <Space>
           <Button onClick={onClose}>Fermer</Button>
-          <Button 
-            icon={<FilePdfOutlined />} 
+          <Button
+            icon={<FilePdfOutlined />}
             onClick={handleExportPDF}
             loading={exporting}
           >
             Exporter PDF
           </Button>
-          <Button 
+          <Button
             type="primary"
-            icon={<FileExcelOutlined />} 
+            icon={<FileExcelOutlined />}
             onClick={handleExportExcel}
             loading={exporting}
           >
@@ -197,7 +197,7 @@ export const PointCaisseModal: React.FC<PointCaisseModalProps> = ({
                 value={data.entrees}
                 prefix={<ArrowUpOutlined />}
                 valueStyle={{ color: '#52c41a' }}
-                formatter={(value) => formatMontantWithDevise(Number(value))}
+                formatter={(value: any) => formatMontantWithDevise(Number(value))}
               />
             </Card>
           </Col>
@@ -208,7 +208,7 @@ export const PointCaisseModal: React.FC<PointCaisseModalProps> = ({
                 value={data.sorties}
                 prefix={<ArrowDownOutlined />}
                 valueStyle={{ color: '#ff4d4f' }}
-                formatter={(value) => formatMontantWithDevise(Number(value))}
+                formatter={(value: any) => formatMontantWithDevise(Number(value))}
               />
             </Card>
           </Col>
@@ -219,7 +219,7 @@ export const PointCaisseModal: React.FC<PointCaisseModalProps> = ({
                 value={solde}
                 prefix={<DollarOutlined />}
                 valueStyle={{ color: solde < 0 ? '#ff4d4f' : '#1890ff', fontSize: 24 }}
-                formatter={(value) => formatMontantWithDevise(Number(value))}
+                formatter={(value: any) => formatMontantWithDevise(Number(value))}
               />
             </Card>
           </Col>
@@ -251,11 +251,11 @@ export const PointCaisseModal: React.FC<PointCaisseModalProps> = ({
                 valueStyle={{ color: ratio > 90 ? '#ff4d4f' : ratio > 70 ? '#faad14' : '#52c41a' }}
               />
               <Text type="secondary" style={{ fontSize: 12 }}>
-                {ratio > 90 
+                {ratio > 90
                   ? 'Très élevé - Attention requise'
-                  : ratio > 70 
-                  ? 'Élevé - Surveiller'
-                  : 'Normal'}
+                  : ratio > 70
+                    ? 'Élevé - Surveiller'
+                    : 'Normal'}
               </Text>
             </Col>
             <Col xs={24} sm={12}>
@@ -299,7 +299,7 @@ export const PointCaisseModal: React.FC<PointCaisseModalProps> = ({
                 <Text strong>Action Urgente Requise</Text>
                 <br />
                 <Text type="secondary">
-                  Le solde est négatif. Il est recommandé de procéder à un approvisionnement 
+                  Le solde est négatif. Il est recommandé de procéder à un approvisionnement
                   immédiat de la caisse.
                 </Text>
               </Timeline.Item>
@@ -309,7 +309,7 @@ export const PointCaisseModal: React.FC<PointCaisseModalProps> = ({
                 <Text strong>Surveillance des Sorties</Text>
                 <br />
                 <Text type="secondary">
-                  Le taux de sortie est très élevé. Analyser les dépenses pour identifier 
+                  Le taux de sortie est très élevé. Analyser les dépenses pour identifier
                   les opportunités d'optimisation.
                 </Text>
               </Timeline.Item>

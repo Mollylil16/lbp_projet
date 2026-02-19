@@ -25,6 +25,12 @@ export class Facture {
     @Column({ default: 0 })
     etat: number; // 0: Proforma, 1: Définitive, 2: Annulée
 
+    @Column({ length: 10, default: 'XOF' })
+    devise: string;
+
+    @Column({ type: 'decimal', precision: 12, scale: 4, default: 1 })
+    taux_change: number;
+
     @Column({ type: 'date' })
     date_facture: Date;
 

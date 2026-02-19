@@ -31,6 +31,7 @@ export interface Agency {
   address?: string
   phone?: string
   email?: string
+  currency?: string // Ajouté pour le support multi-devises
 }
 
 export interface AuthResponse {
@@ -84,6 +85,12 @@ export interface Colis {
   code_user: string
   agence?: Agency
   date_enrg: string
+  // Champs additionnels pour compatibilité avec les composants
+  etat_validation?: number
+  client?: any
+  nom_dest?: string
+  marchandises?: any[]
+  expedition?: Expedition // Relation avec Expedition
 }
 
 export interface ClientColis {
@@ -118,6 +125,9 @@ export interface Paiement {
   facture_id?: number
   colis_id?: number
   code_user: string
+  etat_validation?: number
+  created_at?: string
+  reference_paiement?: string
 }
 
 // Types Dashboard
@@ -140,11 +150,11 @@ export interface PointCaisse {
 }
 
 // Types Caisse
-export type TypeMouvementCaisse = 
-  | 'APPRO' 
-  | 'DECAISSEMENT' 
-  | 'ENTREE_CHEQUE' 
-  | 'ENTREE_ESPECE' 
+export type TypeMouvementCaisse =
+  | 'APPRO'
+  | 'DECAISSEMENT'
+  | 'ENTREE_CHEQUE'
+  | 'ENTREE_ESPECE'
   | 'ENTREE_VIREMENT'
 
 export type ModeReglement = 'ESPECE' | 'CHEQUE' | 'VIREMENT'
@@ -233,7 +243,7 @@ export interface CreateColisDto {
   date_envoi: string
   mode_envoi: string
   forme_envoi: 'groupage' | 'autres_envoi'
-  
+
   // Informations expéditeur
   client_colis: {
     nom_exp: string
@@ -242,7 +252,7 @@ export interface CreateColisDto {
     tel_exp: string
     email_exp?: string
   }
-  
+
   // Informations marchandise (tableau pour plusieurs colis)
   marchandise: Array<{
     nom_marchandise: string
@@ -250,17 +260,18 @@ export interface CreateColisDto {
     nbre_articles: number
     poids_total: number
     prix_unit: number
+    id_tarif?: number
     prix_emballage?: number
     prix_assurance?: number
     prix_agence?: number
   }>
-  
+
   // Informations destinataire
   nom_destinataire: string
   lieu_dest: string
   tel_dest: string
   email_dest?: string
-  
+
   // Informations récupérateur (optionnel)
   nom_recup?: string
   adresse_recup?: string
@@ -270,4 +281,27 @@ export interface CreateColisDto {
 
 export interface UpdateColisDto extends Partial<CreateColisDto> {
   id?: number
+}
+
+export interface Expedition {
+  id: number;
+  ref_expedition: string;
+  date_depart: string;
+  date_arrivee_prevue?: string;
+  statut: 'EN_PREPARATION' | 'EN_TRANSIT' | 'ARRIVE' | 'DEDOUANE' | 'LIVRE';
+  type: 'AERIEN' | 'MARITIME';
+  agence_depart: Agency;
+  agence_destination: Agency;
+  colis?: Colis[];
+  numero_container?: string;
+  compagnie_transport?: string;
+  created_at: string;
+}
+
+export interface CreateExpeditionDto {
+  id_agence_destination: number;
+  type: 'AERIEN' | 'MARITIME';
+  numero_container?: string;
+  compagnie_transport?: string;
+  date_arrivee_prevue?: string;
 }

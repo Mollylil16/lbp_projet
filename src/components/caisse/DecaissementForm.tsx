@@ -18,7 +18,7 @@ import {
   validateNumeroDossier,
 } from "@services/caisse.service";
 import type { MouvementCaisse } from "@types";
-import { useAuth } from "@contexts/AuthContext";
+import { useAuth } from "@hooks/useAuth";
 import { useColisList } from "@hooks/useColis";
 
 const { TextArea } = Input;
@@ -101,7 +101,7 @@ export const DecaissementForm: React.FC<DecaissementFormProps> = ({
       console.error("Erreur lors de la création du décaissement:", error);
       message.error(
         error?.response?.data?.message ||
-          "Erreur lors de la création du décaissement"
+        "Erreur lors de la création du décaissement"
       );
     } finally {
       setLoading(false);
@@ -190,14 +190,14 @@ export const DecaissementForm: React.FC<DecaissementFormProps> = ({
           <AutoComplete
             options={dossierOptions}
             placeholder="Saisissez le numéro de dossier (ex: LBP-0124-001)"
-            onBlur={(e) => {
+            onBlur={(e: React.FocusEvent<HTMLElement>) => {
               const target = e.target as HTMLInputElement;
               if (target.value) {
                 handleValidateDossier(target.value);
               }
             }}
-            onSelect={(value) => handleValidateDossier(value)}
-            filterOption={(inputValue, option) =>
+            onSelect={(value: string) => handleValidateDossier(value)}
+            filterOption={(inputValue: string, option: any) =>
               option!.value.toUpperCase().indexOf(inputValue.toUpperCase()) !==
               -1
             }
@@ -223,7 +223,7 @@ export const DecaissementForm: React.FC<DecaissementFormProps> = ({
               message: "Le montant doit être supérieur à 0",
             },
             {
-              validator: (_, value) => {
+              validator: (_: any, value: number) => {
                 if (value > soldeActuel) {
                   return Promise.reject(
                     new Error(
@@ -243,10 +243,10 @@ export const DecaissementForm: React.FC<DecaissementFormProps> = ({
             placeholder="Montant en FCFA"
             min={0}
             step={1000}
-            formatter={(value) =>
+            formatter={(value: any) =>
               `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, " ")
             }
-            parser={(value) => Number(value?.replace(/\s?/g, "") || "0")}
+            parser={(value: any) => Number(value?.replace(/\s?/g, "") || "0")}
           />
         </Form.Item>
 
@@ -263,16 +263,16 @@ export const DecaissementForm: React.FC<DecaissementFormProps> = ({
         {soldeActuel !== undefined && (
           <Form.Item
             noStyle
-            shouldUpdate={(prevValues, currentValues) =>
+            shouldUpdate={(prevValues: any, currentValues: any) =>
               prevValues.montant !== currentValues.montant
             }
           >
-            {({ getFieldValue }) => {
+            {({ getFieldValue }: any) => {
               const montant = getFieldValue("montant") || 0;
               const nouveauSolde = soldeActuel - montant;
-              
+
               if (!montant) return null;
-              
+
               return (
                 <Form.Item label="Solde après décaissement">
                   <Input

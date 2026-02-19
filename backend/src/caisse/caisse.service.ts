@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException, OnApplicationBootstrap } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository, Between, DataSource } from 'typeorm';
 import { Caisse } from './entities/caisse.entity';
 import { MouvementCaisse, MouvementType } from './entities/mouvement-caisse.entity';
+import { Agence } from '../agences/entities/agence.entity';
 
 @Injectable()
 export class CaisseService implements OnApplicationBootstrap {
@@ -11,23 +12,35 @@ export class CaisseService implements OnApplicationBootstrap {
         private caisseRepository: Repository<Caisse>,
         @InjectRepository(MouvementCaisse)
         private mouvementRepository: Repository<MouvementCaisse>,
+        @InjectRepository(Agence)
+        private agenceRepository: Repository<Agence>,
     ) { }
 
     async onApplicationBootstrap() {
-        // S'assurer qu'il existe au moins une caisse par défaut
-        const count = await this.caisseRepository.count();
-        if (count === 0) {
-            await this.caisseRepository.save({
-                nom: 'Caisse Principale',
-                solde_initial: 0,
-            });
-            console.log('Default cash register created');
+        // S'assurer qu'il existe une caisse pour chaque agence existante
+        const agences = await this.agenceRepository.find();
+        for (const agence of agences) {
+            const existing = await this.caisseRepository.findOne({ where: { agence: { id: agence.id } } });
+            if (!existing) {
+                await this.caisseRepository.save({
+                    nom: `Caisse - ${agence.nom}`,
+                    solde_initial: 0,
+                    agence: agence,
+                });
+                console.log(`Cash register created for agency: ${agence.nom}`);
+            }
         }
     }
 
-    async createMovement(data: any, type: MouvementType, userId: string): Promise<MouvementCaisse> {
-        const caisseId = data.id_caisse || 1; // Default to ID 1 if not provided
-        const caisse = await this.caisseRepository.findOne({ where: { id: caisseId } });
+    async createMovement(data: any, type: MouvementType, userId: string, agenceId?: number): Promise<MouvementCaisse> {
+        let caisseId = data.id_caisse;
+
+        if (!caisseId && agenceId) {
+            const caisse = await this.caisseRepository.findOne({ where: { agence: { id: agenceId } } });
+            caisseId = caisse?.id;
+        }
+
+        const caisse = await this.caisseRepository.findOne({ where: { id: caisseId || 1 } });
 
         if (!caisse) {
             throw new NotFoundException(`Caisse #${caisseId} not found`);
@@ -44,11 +57,16 @@ export class CaisseService implements OnApplicationBootstrap {
         return await this.mouvementRepository.save(mouvement);
     }
 
-    async getMouvements(params: any): Promise<MouvementCaisse[]> {
+    async getMouvements(params: any, agenceId?: number): Promise<MouvementCaisse[]> {
         const { id_caisse, date_debut, date_fin, type } = params;
         const where: any = {};
 
-        if (id_caisse) where.caisse = { id: id_caisse };
+        if (id_caisse) {
+            where.caisse = { id: id_caisse };
+        } else if (agenceId) {
+            where.caisse = { agence: { id: agenceId } };
+        }
+
         if (type) where.type = type;
         if (date_debut && date_fin) {
             where.date_mouvement = Between(new Date(date_debut), new Date(date_fin));
@@ -112,7 +130,10 @@ export class CaisseService implements OnApplicationBootstrap {
         };
     }
 
-    async findAllCaisses(): Promise<Caisse[]> {
+    async findAllCaisses(agenceId?: number): Promise<Caisse[]> {
+        if (agenceId) {
+            return this.caisseRepository.find({ where: { agence: { id: agenceId } } });
+        }
         return this.caisseRepository.find();
     }
 

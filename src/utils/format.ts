@@ -11,7 +11,7 @@ import { APP_CONFIG } from '@constants/application'
  */
 export function formatDate(date: string | Date | null | undefined): string {
   if (!date) return '-'
-  
+
   try {
     const dateObj = typeof date === 'string' ? parseISO(date) : date
     return format(dateObj, APP_CONFIG.dateFormat, { locale: fr })
@@ -25,7 +25,7 @@ export function formatDate(date: string | Date | null | undefined): string {
  */
 export function formatDateTime(date: string | Date | null | undefined): string {
   if (!date) return '-'
-  
+
   try {
     const dateObj = typeof date === 'string' ? parseISO(date) : date
     return format(dateObj, APP_CONFIG.dateTimeFormat, { locale: fr })
@@ -39,11 +39,11 @@ export function formatDateTime(date: string | Date | null | undefined): string {
  */
 export function formatMontant(montant: number | string | null | undefined): string {
   if (montant === null || montant === undefined) return '0'
-  
+
   const num = typeof montant === 'string' ? parseFloat(montant) : montant
-  
+
   if (isNaN(num)) return '0'
-  
+
   return new Intl.NumberFormat('fr-FR', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
@@ -53,8 +53,8 @@ export function formatMontant(montant: number | string | null | undefined): stri
 /**
  * Formate un montant avec devise
  */
-export function formatMontantWithDevise(montant: number | string | null | undefined): string {
-  return `${formatMontant(montant)} ${APP_CONFIG.devise}`
+export function formatMontantWithDevise(montant: number | string | null | undefined, devise?: string): string {
+  return `${formatMontant(montant)} ${devise || APP_CONFIG.devise}`
 }
 
 /**
@@ -62,7 +62,7 @@ export function formatMontantWithDevise(montant: number | string | null | undefi
  */
 export function formatPhone(phone: string | null | undefined): string {
   if (!phone) return '-'
-  
+
   // Format: +225 XX XX XX XX XX
   const cleaned = phone.replace(/\D/g, '')
   if (cleaned.length === 10) {
@@ -71,7 +71,7 @@ export function formatPhone(phone: string | null | undefined): string {
   if (cleaned.length === 13 && cleaned.startsWith('225')) {
     return cleaned.replace(/(\d{3})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '+$1 $2 $3 $4 $5 $6')
   }
-  
+
   return phone
 }
 
@@ -107,7 +107,7 @@ export function formatStatus(status: string | number): string {
   if (typeof status === 'number') {
     return status === 1 ? 'Actif' : 'Inactif'
   }
-  
+
   return status
     .split('_')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
