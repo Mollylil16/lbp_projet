@@ -6,6 +6,7 @@ import React from "react";
 import { useNotifications } from "@contexts/NotificationsContext";
 import { colisService } from "./colis.service";
 import { caisseService } from "./caisse.service";
+import { facturesService } from "./factures.service";
 
 export interface AlertConfig {
   enabled: boolean;
@@ -106,7 +107,19 @@ export const checkFacturesProforma = async (
   addNotification: (notif: any) => void
 ) => {
   try {
-    // TODO: Implémenter quand le service factures sera disponible
+    const response = await facturesService.getFactures('proforma', { page: 1, limit: 100 });
+    const factures = response.data || [];
+
+    if (factures.length > 0) {
+      addNotification({
+        type: "warning",
+        title: `${factures.length} facture(s) proforma en attente`,
+        message: `Il y a ${factures.length} facture(s) proforma qui attendent d'être validées en facture définitive.`,
+        category: "factures",
+        actionUrl: "/factures",
+        actionLabel: "Voir les factures",
+      });
+    }
   } catch (error) {
     console.error("Erreur lors de la vérification des factures:", error);
   }

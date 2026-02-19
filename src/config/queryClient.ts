@@ -1,67 +1,84 @@
 import { QueryClient } from '@tanstack/react-query';
+import type { PersistedClient, Persister } from '@tanstack/react-query-persist-client';
+import toast from 'react-hot-toast';
+import { persistentCache } from '@utils/cachePersistent';
 
-/**
- * Configuration optimale de TanStack Query pour LBP
- */
+// ─── QueryClient central ─────────────────────────────────────────────────────
+
 export const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            // ✅ Cache intelligent
-            staleTime: 5 * 60 * 1000, // 5 minutes - données considérées fraîches
-            gcTime: 10 * 60 * 1000, // 10 minutes - garbage collection (anciennement cacheTime)
-
-            // ✅ Retry strategy
+            staleTime: 5 * 60 * 1000,        // 5 min — données fraîches
+            gcTime: 30 * 60 * 1000,           // 30 min — survie en mémoire
+            networkMode: 'offlineFirst',       // Lire le cache même hors ligne
             retry: (failureCount, error: any) => {
-                // Ne pas retry sur les erreurs 4xx (erreurs client)
                 if (error?.response?.status >= 400 && error?.response?.status < 500) {
                     return false;
                 }
-                // Retry max 2 fois pour les erreurs serveur
                 return failureCount < 2;
             },
-            retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-
-            // ✅ Refetch strategies
-            refetchOnWindowFocus: true, // Rafraîchir au focus de la fenêtre
-            refetchOnReconnect: true, // Rafraîchir à la reconnexion
-            refetchOnMount: false, // Ne pas refetch si données en cache
-
-            // ✅ Performance
-            structuralSharing: true, // Optimisation mémoire
+            retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30_000),
+            refetchOnWindowFocus: true,
+            refetchOnReconnect: true,
+            refetchOnMount: false,
+            structuralSharing: true,
         },
         mutations: {
-            // ✅ Retry pour mutations
-            retry: false, // Ne jamais retry les mutations automatiquement
-
-            // ✅ Callbacks globaux
+            networkMode: 'offlineFirst',      // Permettre les mutations offline
+            retry: false,
             onError: (error: any) => {
                 console.error('Mutation error:', error);
-                // TODO: Afficher notification d'erreur globale
+                const status = error?.response?.status;
+                const message = error?.response?.data?.message || error?.message;
+
+                if (status === 401) {
+                    toast.error('Session expirée, veuillez vous reconnecter.');
+                } else if (status === 403) {
+                    toast.error('Accès refusé. Vous n\'avez pas les permissions nécessaires.');
+                } else if (status === 404) {
+                    toast.error('Ressource introuvable.');
+                } else if (status === 422 || status === 400) {
+                    toast.error(message || 'Données invalides. Vérifiez le formulaire.');
+                } else if (status >= 500) {
+                    toast.error('Erreur serveur. Veuillez réessayer plus tard.');
+                } else if (!navigator.onLine) {
+                    toast('Action mise en attente — vous êtes hors ligne.', { icon: '📶' });
+                } else {
+                    toast.error(message || 'Une erreur est survenue.');
+                }
             },
         },
     },
 });
 
-/**
- * Préfetch helper pour charger les données à l'avance
- */
-export const prefetchQuery = async (queryKey: any[], queryFn: () => Promise<any>) => {
-    await queryClient.prefetchQuery({
-        queryKey,
-        queryFn,
-    });
+// ─── Persister IndexedDB (TanStack Query persist-client) ─────────────────────
+
+const IDB_CACHE_KEY = 'tanstack_query_cache';
+const IDB_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 h
+
+export const idbPersister: Persister = {
+    persistClient: async (client: PersistedClient) => {
+        await persistentCache.set(IDB_CACHE_KEY, client, IDB_CACHE_TTL);
+    },
+    restoreClient: async (): Promise<PersistedClient | undefined> => {
+        const cached = await persistentCache.get<PersistedClient>(IDB_CACHE_KEY);
+        return cached ?? undefined;
+    },
+    removeClient: async () => {
+        await persistentCache.delete(IDB_CACHE_KEY);
+    },
 };
 
-/**
- * Invalidate helper pour forcer le rafraîchissement
- */
-export const invalidateQueries = (queryKey: any[]) => {
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+export const prefetchQuery = async (queryKey: unknown[], queryFn: () => Promise<unknown>) => {
+    await queryClient.prefetchQuery({ queryKey, queryFn });
+};
+
+export const invalidateQueries = (queryKey: unknown[]) => {
     queryClient.invalidateQueries({ queryKey });
 };
 
-/**
- * Set query data helper pour optimistic updates
- */
-export const setQueryData = (queryKey: any[], updater: any) => {
+export const setQueryData = (queryKey: unknown[], updater: unknown) => {
     queryClient.setQueryData(queryKey, updater);
 };

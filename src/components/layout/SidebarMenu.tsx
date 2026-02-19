@@ -214,13 +214,17 @@ export const SidebarMenu: React.FC<SidebarMenuProps> = ({ collapsed }) => {
         location.pathname.startsWith("/settings") ? ["settings_root"] : [];
 
   return (
-    <Menu
-      mode="inline"
-      selectedKeys={selectedKeys}
-      defaultOpenKeys={openKeys}
-      items={menuItems}
-      onClick={handleMenuClick}
-      className="modern-sidebar-menu"
-    />
+    <nav aria-label="Navigation principale">
+      <Menu
+        mode="inline"
+        selectedKeys={selectedKeys}
+        defaultOpenKeys={openKeys}
+        items={menuItems}
+        onClick={handleMenuClick}
+        className="modern-sidebar-menu"
+        role="menubar"
+        aria-label="Menu principal"
+      />
+    </nav>
   );
 };

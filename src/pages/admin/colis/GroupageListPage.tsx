@@ -95,6 +95,7 @@ export const ColisGroupageListPage: React.FC = () => {
           <ColisForm
             formeEnvoi="groupage"
             onSubmit={handleSubmit}
+            onCancel={handleCancel}
             initialData={
               selectedColis
                 ? {

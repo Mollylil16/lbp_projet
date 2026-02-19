@@ -11,18 +11,32 @@ import './ThemeToggle.css'
 export const ThemeToggle: React.FC = () => {
   const { mode, toggleTheme, isDark } = useTheme()
 
+  const label = isDark ? 'Passer en mode clair' : 'Passer en mode sombre'
+
   return (
-    <Tooltip title={isDark ? 'Passer en mode clair' : 'Passer en mode sombre'}>
-      <div className="theme-toggle">
-        <SunOutlined className={`theme-icon ${!isDark ? 'active' : ''}`} />
+    <Tooltip title={label}>
+      <div
+        className="theme-toggle"
+        role="group"
+        aria-label="Basculer le thème"
+      >
+        <SunOutlined
+          className={`theme-icon ${!isDark ? 'active' : ''}`}
+          aria-hidden="true"
+        />
         <Switch
           checked={isDark}
           onChange={toggleTheme}
-          checkedChildren={<MoonOutlined />}
-          unCheckedChildren={<SunOutlined />}
+          checkedChildren={<MoonOutlined aria-hidden="true" />}
+          unCheckedChildren={<SunOutlined aria-hidden="true" />}
           size="small"
+          aria-label={label}
+          aria-pressed={isDark}
         />
-        <MoonOutlined className={`theme-icon ${isDark ? 'active' : ''}`} />
+        <MoonOutlined
+          className={`theme-icon ${isDark ? 'active' : ''}`}
+          aria-hidden="true"
+        />
       </div>
     </Tooltip>
   )

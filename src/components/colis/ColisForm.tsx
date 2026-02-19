@@ -80,6 +80,7 @@ type ColisFormData = z.infer<typeof colisFormSchema>
 interface ColisFormProps {
   formeEnvoi: 'groupage' | 'autres_envoi'
   onSubmit: (data: CreateColisDto) => void | Promise<void>
+  onCancel?: () => void
   initialData?: Partial<ColisFormData>
   loading?: boolean
 }
@@ -87,6 +88,7 @@ interface ColisFormProps {
 export const ColisForm: React.FC<ColisFormProps> = ({
   formeEnvoi,
   onSubmit,
+  onCancel,
   initialData,
   loading = false,
 }) => {
@@ -951,7 +953,7 @@ export const ColisForm: React.FC<ColisFormProps> = ({
           <Button type="primary" htmlType="submit" icon={<SaveOutlined />} size="large" loading={loading}>
             Enregistrer
           </Button>
-          <Button size="large">Annuler</Button>
+          <Button size="large" onClick={onCancel}>Annuler</Button>
         </Space>
       </Card>
     </Form>

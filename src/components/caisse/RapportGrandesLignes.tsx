@@ -2,6 +2,14 @@
  * Rapport "Grandes Lignes" avec totaux
  */
 
+/**
+ * Rapport "Grandes Lignes" avec totaux
+ */
+
+/**
+ * Rapport "Grandes Lignes" avec totaux
+ */
+
 import React from "react";
 import {
   Card,
@@ -13,13 +21,19 @@ import {
   Table,
   Statistic,
   Tag,
+  Dropdown,
 } from "antd";
-import { ReloadOutlined, DownloadOutlined } from "@ant-design/icons";
+import type { RangePickerProps } from "antd/es/date-picker";
+import { ReloadOutlined, DownloadOutlined, FilePdfOutlined, FileExcelOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { formatMontantWithDevise } from "@utils/format";
 import type { RapportGrandesLignes as RapportGrandesLignesType } from "@types";
 import { getRapportGrandesLignes } from "@services/caisse.service";
 import type { ColumnsType } from "antd/es/table";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 
 const { RangePicker } = DatePicker;
 
@@ -63,13 +77,69 @@ export const RapportGrandesLignes: React.FC<RapportGrandesLignesProps> = ({
   }, [loadRapport]);
 
   const handleExportPDF = () => {
-    // TODO: Implémenter l'export PDF
-    console.log("Export PDF du rapport");
+    if (!rapport) return;
+    const doc = new jsPDF();
+    const periode = `${dateRange[0].format("DD/MM/YYYY")} - ${dateRange[1].format("DD/MM/YYYY")}`;
+
+    doc.setFontSize(16);
+    doc.text("Rapport Grandes Lignes - Caisse", 14, 18);
+    doc.setFontSize(11);
+    doc.text(`Période : ${periode}`, 14, 28);
+
+    const rows = [
+      ["Approvisionnement", rapport.total_appro],
+      ["Décaissement", rapport.total_decaissement],
+      ["Entrées Chèque", rapport.total_entrees_cheque],
+      ["Entrées Espèce", rapport.total_entrees_espece],
+      ["Entrées Virement", rapport.total_entrees_virement],
+      ["TOTAL ENTRÉES", rapport.total_entrees],
+    ].map(([label, montant]) => [label, `${Number(montant).toLocaleString("fr-FR")} FCFA`]);
+
+    autoTable(doc, {
+      head: [["Type", "Montant"]],
+      body: rows,
+      startY: 35,
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [30, 136, 229] },
+    });
+
+    doc.save(`rapport-caisse-${dateRange[0].format("YYYYMMDD")}.pdf`);
   };
 
-  const handleExportExcel = () => {
-    // TODO: Implémenter l'export Excel
-    console.log("Export Excel du rapport");
+  const handleExportExcel = async () => {
+    if (!rapport) return;
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Rapport Caisse");
+    const periode = `${dateRange[0].format("DD/MM/YYYY")} - ${dateRange[1].format("DD/MM/YYYY")}`;
+
+    sheet.mergeCells("A1:B1");
+    sheet.getCell("A1").value = `Rapport Grandes Lignes - Période : ${periode}`;
+    sheet.getCell("A1").font = { bold: true, size: 13 };
+    sheet.addRow([]);
+
+    sheet.addRow(["Type", "Montant (FCFA)"]);
+    sheet.getRow(3).font = { bold: true };
+    sheet.getRow(3).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E88E5" } };
+
+    const data = [
+      ["Approvisionnement", rapport.total_appro],
+      ["Décaissement", rapport.total_decaissement],
+      ["Entrées Chèque", rapport.total_entrees_cheque],
+      ["Entrées Espèce", rapport.total_entrees_espece],
+      ["Entrées Virement", rapport.total_entrees_virement],
+      ["TOTAL ENTRÉES", rapport.total_entrees],
+    ];
+
+    data.forEach(([label, montant]) => {
+      const row = sheet.addRow([label, montant]);
+      if (label === "TOTAL ENTRÉES") row.font = { bold: true };
+    });
+
+    sheet.getColumn(1).width = 35;
+    sheet.getColumn(2).width = 22;
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), `rapport-caisse-${dateRange[0].format("YYYYMMDD")}.xlsx`);
   };
 
   if (!rapport) {
@@ -79,7 +149,7 @@ export const RapportGrandesLignes: React.FC<RapportGrandesLignesProps> = ({
           <Space>
             <RangePicker
               value={dateRange}
-              onChange={(dates) =>
+              onChange={(dates: RangePickerProps["value"]) =>
                 setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs])
               }
               format="DD/MM/YYYY"
@@ -174,7 +244,7 @@ export const RapportGrandesLignes: React.FC<RapportGrandesLignesProps> = ({
         <Space wrap>
           <RangePicker
             value={dateRange}
-            onChange={(dates: any) =>
+            onChange={(dates: RangePickerProps["value"]) =>
               setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs])
             }
             format="DD/MM/YYYY"
@@ -187,12 +257,26 @@ export const RapportGrandesLignes: React.FC<RapportGrandesLignesProps> = ({
           >
             Actualiser
           </Button>
-          <Button icon={<DownloadOutlined />} onClick={handleExportPDF}>
-            Export PDF
-          </Button>
-          <Button icon={<DownloadOutlined />} onClick={handleExportExcel}>
-            Export Excel
-          </Button>
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: "pdf",
+                  label: "Exporter en PDF",
+                  icon: <FilePdfOutlined />,
+                  onClick: handleExportPDF,
+                },
+                {
+                  key: "excel",
+                  label: "Exporter en Excel",
+                  icon: <FileExcelOutlined />,
+                  onClick: handleExportExcel,
+                },
+              ],
+            }}
+          >
+            <Button icon={<DownloadOutlined />}>Exporter</Button>
+          </Dropdown>
         </Space>
 
         <div style={{ textAlign: "center", marginBottom: 24 }}>

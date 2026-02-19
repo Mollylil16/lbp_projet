@@ -2,10 +2,11 @@ import React, { useState } from 'react'
 import { Modal, Typography, Tabs } from 'antd'
 import { PaiementList } from '@components/paiements/PaiementList'
 import { PaiementForm } from '@components/paiements/PaiementForm'
+import { SuiviPaiementsPage } from './SuiviPaiementsPage'
 import { CreatePaiementDto } from '@services/paiements.service'
 import { useCreatePaiement } from '@hooks/usePaiements'
 import { Input, Button } from 'antd'
-import { SearchOutlined, PlusOutlined } from '@ant-design/icons'
+import { SearchOutlined, PlusOutlined, BarChartOutlined } from '@ant-design/icons'
 import { WithPermission } from '@components/common/WithPermission'
 import { PERMISSIONS } from '@constants/permissions'
 
@@ -46,8 +47,15 @@ export const PaiementsListPage: React.FC = () => {
 
   const tabItems = [
     {
+      key: 'suivi',
+      label: (
+        <span><BarChartOutlined /> Suivi Paiements</span>
+      ),
+      children: <SuiviPaiementsPage />,
+    },
+    {
       key: 'list',
-      label: 'Liste des Paiements',
+      label: 'Historique Paiements',
       children: <PaiementList />,
     },
     {
@@ -102,6 +110,7 @@ export const PaiementsListPage: React.FC = () => {
               <PaiementForm
                 refColis={refColis}
                 onSubmit={handleSubmit}
+                onCancel={handleCancel}
                 loading={createMutation.isPending}
               />
             )}
@@ -115,7 +124,7 @@ export const PaiementsListPage: React.FC = () => {
     <div>
       <Title level={2}>Gestion des Paiements</Title>
 
-      <Tabs defaultActiveKey="list" items={tabItems} />
+      <Tabs defaultActiveKey="suivi" items={tabItems} />
     </div>
   )
 }

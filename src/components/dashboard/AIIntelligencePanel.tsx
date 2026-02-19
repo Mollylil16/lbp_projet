@@ -1,5 +1,5 @@
 import React from 'react'
-import { Card, List, Typography, Button, Tag, Space, Alert, Empty, Skeleton } from 'antd'
+import { Card, List, Typography, Button, Tag, Space, Alert, Skeleton } from 'antd'
 import {
     RobotOutlined,
     ArrowRightOutlined,
@@ -8,6 +8,7 @@ import {
     InfoCircleOutlined,
     BulbOutlined
 } from '@ant-design/icons'
+import { EmptyRecommandations } from '@components/common/EmptyState'
 
 const { Title, Text, Paragraph } = Typography
 
@@ -48,7 +49,7 @@ export const AIIntelligencePanel: React.FC<AIIntelligencePanelProps> = ({
             bodyStyle={{ padding: '0 24px 24px' }}
         >
             {recommendations.length === 0 ? (
-                <Empty description="Aucune recommandation pour le moment" style={{ padding: '20px' }} />
+                <EmptyRecommandations />
             ) : (
                 <List
                     itemLayout="vertical"

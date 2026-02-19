@@ -12,10 +12,18 @@ import {
   Col,
   DatePicker,
 } from "antd";
+import type { RangePickerProps } from "antd/es/date-picker";
+import type { ChangeEvent, KeyboardEvent } from "react";
 import {
   SearchOutlined,
   ReloadOutlined,
   CloseCircleOutlined,
+  WalletOutlined,
+  MobileOutlined,
+  BankOutlined,
+  FileTextOutlined,
+  CalendarOutlined,
+  DollarOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs, { Dayjs } from "dayjs";
@@ -24,6 +32,9 @@ import { formatDate, formatMontantWithDevise } from "@utils/format";
 import { usePaiementsList, useCancelPaiement } from "@hooks/usePaiements";
 import { WithPermission } from "@components/common/WithPermission";
 import { PERMISSIONS } from "@constants/permissions";
+import { EmptyPaiementsList, EmptySearchState } from "@components/common/EmptyState";
+import { VirtualTable } from "@components/common/VirtualTable";
+import { APP_CONFIG } from "@constants/application";
 
 const { RangePicker } = DatePicker;
 
@@ -62,40 +73,106 @@ export const PaiementList: React.FC<PaiementListProps> = ({ refColis }) => {
     refetch();
   };
 
+  const getModeIcon = (value: string) => {
+    switch (value) {
+      case 'wave':
+      case 'om':       return <MobileOutlined />;
+      case 'especes':  return <WalletOutlined />;
+      case 'cheque':   return <FileTextOutlined />;
+      case 'virement': return <BankOutlined />;
+      case '30j':
+      case '45j':
+      case '60j':
+      case '90j':      return <CalendarOutlined />;
+      default:         return <DollarOutlined />;
+    }
+  };
+
+  const getModeTag = (mode: string) => {
+    const config = APP_CONFIG.modesPaiement.find(
+      (m) => m.label.toLowerCase() === mode?.toLowerCase() || m.value === mode?.toLowerCase()
+    );
+    const iconKey = config?.value ?? mode?.toLowerCase() ?? '';
+    return (
+      <Tag color={config?.color || 'default'} icon={getModeIcon(iconKey)}>
+        {config?.label ?? mode ?? '-'}
+      </Tag>
+    );
+  };
+
   const columns: ColumnsType<Paiement> = [
     {
-      title: "Référence",
+      title: "Réf. Colis",
       dataIndex: "reference",
       key: "reference",
       width: 150,
-      render: (text: string) => text || "-",
+      render: (text: string) => (
+        <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{text || "-"}</span>
+      ),
     },
     {
-      title: "Date",
+      title: "Date & Heure",
       dataIndex: "date_paiement",
       key: "date_paiement",
-      width: 120,
-      render: (date: string) => formatDate(date),
+      width: 150,
+      render: (date: string, record: Paiement) => (
+        <div>
+          <div>{formatDate(date)}</div>
+          {record.created_at && (
+            <div style={{ fontSize: 11, color: '#8c8c8c' }}>
+              {new Date(record.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+            </div>
+          )}
+        </div>
+      ),
       sorter: true,
     },
     {
       title: "Montant",
       dataIndex: "montant",
       key: "montant",
-      width: 150,
+      width: 160,
       render: (montant: number) => (
-        <strong style={{ color: "#52c41a" }}>
+        <strong style={{ color: "#52c41a", fontSize: 15 }}>
           {formatMontantWithDevise(montant)}
         </strong>
       ),
       sorter: true,
     },
     {
-      title: "Mode paiement",
+      title: "Mode",
       dataIndex: "mode_paiement",
       key: "mode_paiement",
-      width: 150,
-      render: (mode: string) => <Tag color="blue">{mode}</Tag>,
+      width: 160,
+      render: (mode: string) => getModeTag(mode),
+      filters: APP_CONFIG.modesPaiement.map((m) => ({ text: m.label, value: m.label })),
+    },
+    {
+      title: "Réf. Transaction",
+      dataIndex: "reference_paiement",
+      key: "reference_paiement",
+      width: 180,
+      render: (ref: string) => ref
+        ? <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{ref}</span>
+        : <span style={{ color: '#bfbfbf' }}>—</span>,
+    },
+    {
+      title: "Enregistré par",
+      dataIndex: "code_user",
+      key: "code_user",
+      width: 130,
+      render: (code: string) => code || '-',
+    },
+    {
+      title: "Statut",
+      dataIndex: "etat_validation",
+      key: "etat_validation",
+      width: 100,
+      render: (etat: number) => (
+        <Tag color={etat === 1 ? 'green' : etat === 0 ? 'red' : 'gold'}>
+          {etat === 1 ? 'Validé' : etat === 0 ? 'Annulé' : 'En attente'}
+        </Tag>
+      ),
     },
     {
       title: "Actions",
@@ -136,8 +213,8 @@ export const PaiementList: React.FC<PaiementListProps> = ({ refColis }) => {
               prefix={<SearchOutlined />}
               allowClear
               value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              onPressEnter={(e) => handleSearch(e.currentTarget.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => handleSearch(e.target.value)}
+              onPressEnter={(e: KeyboardEvent<HTMLInputElement>) => handleSearch(e.currentTarget.value)}
               size="large"
             />
           </Col>
@@ -147,7 +224,7 @@ export const PaiementList: React.FC<PaiementListProps> = ({ refColis }) => {
               style={{ width: "100%" }}
               size="large"
               value={dateRange}
-              onChange={(dates) =>
+              onChange={(dates: RangePickerProps["value"]) =>
                 setDateRange(dates as [Dayjs | null, Dayjs | null])
               }
               format="DD/MM/YYYY"
@@ -168,18 +245,24 @@ export const PaiementList: React.FC<PaiementListProps> = ({ refColis }) => {
 
       {/* TABLEAU */}
       <Card>
-        <Table
+        <VirtualTable<Paiement>
           columns={columns}
           dataSource={data?.data || []}
           loading={isLoading}
           rowKey="id"
-          scroll={{ x: 800 }}
+          scroll={{ x: 1100 }}
+          totalLabel="paiements"
+          locale={{
+            emptyText: searchTerm
+              ? <EmptySearchState searchTerm={searchTerm} onClearSearch={() => { setSearchTerm(''); setPagination({ ...pagination, page: 1 }); }} />
+              : <EmptyPaiementsList />,
+          }}
           pagination={{
             current: pagination.page,
             pageSize: pagination.limit,
             total: data?.total || 0,
             showSizeChanger: true,
-            showTotal: (total: number) => `Total: ${total} paiements`,
+            showTotal: (total: number) => `Total : ${total} paiements`,
             pageSizeOptions: ["10", "20", "50", "100"],
           }}
           onChange={handleTableChange}

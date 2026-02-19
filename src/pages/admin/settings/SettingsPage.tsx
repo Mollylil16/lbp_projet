@@ -22,6 +22,7 @@ import {
 } from '@ant-design/icons'
 import type { UploadProps } from 'antd'
 import { APP_CONFIG } from '@constants/application'
+import { apiService } from '@services/api.service'
 
 const { Title } = Typography
 const { TextArea } = Input
@@ -49,11 +50,27 @@ export const SettingsPage: React.FC = () => {
   const handleSubmit = async (values: any) => {
     setLoading(true)
     try {
-      // TODO: Appel API pour sauvegarder la configuration
-      console.log('Configuration:', values)
+      await apiService.patch('/settings/company', {
+        name: values.companyName,
+        short_name: values.shortName,
+        address: values.address,
+        phone: values.phone,
+        email: values.email,
+        website: values.website,
+        rccm: values.rccm,
+        nif: values.nif,
+        account_number: values.accountNumber,
+        slogan: values.slogan,
+      })
       message.success('Configuration enregistrée avec succès')
-    } catch (error) {
-      message.error('Erreur lors de l\'enregistrement')
+    } catch (error: any) {
+      // Si l'endpoint n'existe pas encore côté backend, on sauvegarde localement
+      if (error?.response?.status === 404) {
+        localStorage.setItem('lbp_company_settings', JSON.stringify(values))
+        message.success('Configuration sauvegardée localement (backend à connecter)')
+      } else {
+        message.error('Erreur lors de l\'enregistrement de la configuration')
+      }
     } finally {
       setLoading(false)
     }

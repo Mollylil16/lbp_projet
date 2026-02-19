@@ -13,6 +13,9 @@ import {
   Input,
   Card,
 } from "antd";
+import type { RangePickerProps } from "antd/es/date-picker";
+import type { ChangeEvent } from "react";
+import { EmptyCaisseList } from "@components/common/EmptyState";
 import {
   EditOutlined,
   DeleteOutlined,
@@ -22,6 +25,7 @@ import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import { formatMontantWithDevise } from "@utils/format";
 import type { MouvementCaisse } from "@types";
+import { VirtualTable } from "@components/common/VirtualTable";
 import { getMouvementsCaisse } from "@services/caisse.service";
 
 const { RangePicker } = DatePicker;
@@ -228,7 +232,7 @@ export const MouvementsCaisseList: React.FC<MouvementsCaisseListProps> = ({
         <Space wrap>
           <RangePicker
             value={dateRange}
-            onChange={(dates) =>
+            onChange={(dates: RangePickerProps["value"]) =>
               setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)
             }
             format="DD/MM/YYYY"
@@ -238,7 +242,7 @@ export const MouvementsCaisseList: React.FC<MouvementsCaisseListProps> = ({
           <Input
             placeholder="Rechercher..."
             value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchText(e.target.value)}
             style={{ width: 200 }}
             allowClear
           />
@@ -278,15 +282,19 @@ export const MouvementsCaisseList: React.FC<MouvementsCaisseListProps> = ({
           </div>
         )}
 
-        <Table<MouvementCaisse>
+        <VirtualTable<MouvementCaisse>
           columns={columns}
           dataSource={filteredMouvements}
           rowKey="id"
           loading={loading}
+          totalLabel="mouvements"
+          locale={{
+            emptyText: <EmptyCaisseList />,
+          }}
           pagination={{
             pageSize: 20,
             showSizeChanger: true,
-            showTotal: (total: number) => `Total: ${total}`,
+            showTotal: (total: number) => `Total : ${total} mouvements`,
           }}
           scroll={{ x: 1200 }}
         />

@@ -4,6 +4,8 @@ import { rolesService } from '../../services/roles.service';
 import { permissionsService } from '../../services/permissions.service';
 import { Role, Permission, PermissionModule } from '../../types/roles.types';
 import { usePermission } from '../../hooks/usePermission';
+import { TableSkeleton } from '@components/common/SkeletonLoader';
+import { EmptyRolesList, EmptyErrorState } from '@components/common/EmptyState';
 import './RolesListPage.css';
 
 const RolesListPage: React.FC = () => {
@@ -45,7 +47,8 @@ const RolesListPage: React.FC = () => {
     if (loading) {
         return (
             <div className="roles-list-page">
-                <div className="loading">Chargement...</div>
+                <h1>Gestion des Rôles</h1>
+                <TableSkeleton rows={4} columns={4} />
             </div>
         );
     }
@@ -53,7 +56,12 @@ const RolesListPage: React.FC = () => {
     if (error) {
         return (
             <div className="roles-list-page">
-                <div className="error">{error}</div>
+                <h1>Gestion des Rôles</h1>
+                <EmptyErrorState
+                    title="Erreur de chargement des rôles"
+                    description={error}
+                    onRetry={loadRoles}
+                />
             </div>
         );
     }
@@ -73,6 +81,9 @@ const RolesListPage: React.FC = () => {
             </div>
 
             <div className="roles-grid">
+                {roles.length === 0 && (
+                    <EmptyRolesList onCreateClick={() => navigate('/admin/roles/new')} />
+                )}
                 {roles.map((role) => (
                     <div key={role.id} className="role-card">
                         <div className="role-header">

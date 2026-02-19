@@ -1,129 +1,94 @@
 /**
- * Utilitaires pour la synchronisation offline
+ * Synchronisation offline — queue persistante IndexedDB + retry exponentiel
  */
+import { persistentCache, type PendingAction } from './cachePersistent';
+import { apiService } from '@services/api.service';
 
-interface PendingAction {
-  id: string;
-  type: 'CREATE' | 'UPDATE' | 'DELETE';
-  resource: string;
-  data: any;
-  timestamp: number;
-  retries: number;
-}
+export type { PendingAction };
 
-const STORAGE_KEY = 'lbp_pending_actions';
-const MAX_RETRIES = 3;
+// ─── Dispatch automatique par type d'action ──────────────────────────────────
+
+const dispatch = async (action: PendingAction): Promise<unknown> => {
+  const { type, endpoint, data } = action;
+  switch (type) {
+    case 'CREATE': return apiService.post(endpoint, data);
+    case 'UPDATE': return apiService.put(endpoint, data);
+    case 'PATCH':  return apiService.patch(endpoint, data);
+    case 'DELETE': return apiService.delete(endpoint);
+    default:       throw new Error(`Unknown action type: ${type}`);
+  }
+};
+
+// ─── API publique ────────────────────────────────────────────────────────────
 
 /**
- * Sauvegarder une action en attente
+ * Ajouter une action à la file d'attente offline
  */
-export const savePendingAction = (action: Omit<PendingAction, 'id' | 'timestamp' | 'retries'>): string => {
-  const pendingActions = getPendingActions();
-  const newAction: PendingAction = {
-    ...action,
-    id: `${Date.now()}-${Math.random()}`,
-    timestamp: Date.now(),
-    retries: 0,
-  };
-
-  pendingActions.push(newAction);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(pendingActions));
-  return newAction.id;
+export const enqueueAction = async (
+  action: Omit<PendingAction, 'id' | 'timestamp' | 'retries'>
+): Promise<string> => {
+  const id = await persistentCache.addPendingAction(action);
+  console.log(`[OfflineSync] Action ${action.type} enqueued: ${id}`);
+  return id;
 };
 
 /**
  * Récupérer toutes les actions en attente
  */
-export const getPendingActions = (): PendingAction[] => {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) return [];
-  try {
-    return JSON.parse(stored);
-  } catch {
-    return [];
-  }
-};
+export const getPendingActions = (): Promise<PendingAction[]> =>
+  persistentCache.getPendingActions();
 
 /**
- * Supprimer une action en attente
+ * Nombre d'actions en attente
  */
-export const removePendingAction = (id: string): void => {
-  const pendingActions = getPendingActions();
-  const filtered = pendingActions.filter((action) => action.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
-};
+export const countPendingActions = (): Promise<number> =>
+  persistentCache.countPendingActions();
 
 /**
- * Incrémenter le nombre de tentatives pour une action
+ * Synchroniser toutes les actions en attente avec backoff exponentiel
+ * Retourne le nombre d'actions réussies
  */
-export const incrementRetry = (id: string): void => {
-  const pendingActions = getPendingActions();
-  const action = pendingActions.find((a) => a.id === id);
-  if (action) {
-    action.retries += 1;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(pendingActions));
-  }
-};
+export const syncPendingActions = async (): Promise<{ success: number; failed: number }> => {
+  const actions = await persistentCache.getPendingActions();
+  if (actions.length === 0) return { success: 0, failed: 0 };
 
-/**
- * Synchroniser les actions en attente avec le serveur
- */
-export const syncPendingActions = async (apiCall: (action: PendingAction) => Promise<any>): Promise<void> => {
-  const pendingActions = getPendingActions();
-  const toRemove: string[] = [];
+  console.log(`[OfflineSync] Synchronizing ${actions.length} pending actions…`);
+  let success = 0;
+  let failed = 0;
 
-  for (const action of pendingActions) {
-    if (action.retries >= MAX_RETRIES) {
-      console.warn(`[OfflineSync] Action ${action.id} a dépassé le nombre maximum de tentatives`);
-      toRemove.push(action.id);
+  for (const action of actions) {
+    if (action.retries >= action.maxRetries) {
+      console.warn(`[OfflineSync] Action ${action.id} exceeded max retries, discarding`);
+      await persistentCache.removePendingAction(action.id);
+      failed++;
       continue;
     }
 
     try {
-      await apiCall(action);
-      toRemove.push(action.id);
-      console.log(`[OfflineSync] Action ${action.id} synchronisée avec succès`);
+      await dispatch(action);
+      await persistentCache.removePendingAction(action.id);
+      console.log(`[OfflineSync] ✅ Action ${action.id} synced`);
+      success++;
     } catch (error) {
-      incrementRetry(action.id);
-      console.error(`[OfflineSync] Erreur lors de la synchronisation de l'action ${action.id}:`, error);
+      const updated: PendingAction = { ...action, retries: action.retries + 1 };
+      await persistentCache.updatePendingAction(updated);
+      console.error(`[OfflineSync] ❌ Action ${action.id} failed (attempt ${updated.retries}/${action.maxRetries}):`, error);
     }
   }
 
-  // Supprimer les actions synchronisées ou ayant échoué
-  toRemove.forEach((id) => removePendingAction(id));
+  console.log(`[OfflineSync] Done: ${success} success, ${failed} failed`);
+  return { success, failed };
 };
 
-/**
- * Vérifier si l'application est en mode offline
- */
-export const isOffline = (): boolean => {
-  return !navigator.onLine;
+// ─── Compatibilité / données offline lecture seule ────────────────────────────
+
+export const saveOfflineData = (key: string, data: unknown): void => {
+  persistentCache.set(`offline_${key}`, data, 24 * 60 * 60 * 1000).catch((err) =>
+    console.error(`[OfflineSync] Save error for ${key}:`, err)
+  );
 };
 
-/**
- * Sauvegarder des données localement pour consultation offline
- */
-export const saveOfflineData = (key: string, data: any): void => {
-  try {
-    localStorage.setItem(`lbp_offline_${key}`, JSON.stringify({
-      data,
-      timestamp: Date.now(),
-    }));
-  } catch (error) {
-    console.error(`[OfflineSync] Erreur lors de la sauvegarde de ${key}:`, error);
-  }
-};
+export const getOfflineData = async <T>(key: string): Promise<T | null> =>
+  persistentCache.get<T>(`offline_${key}`);
 
-/**
- * Récupérer des données sauvegardées localement
- */
-export const getOfflineData = <T>(key: string): T | null => {
-  try {
-    const stored = localStorage.getItem(`lbp_offline_${key}`);
-    if (!stored) return null;
-    const parsed = JSON.parse(stored);
-    return parsed.data as T;
-  } catch {
-    return null;
-  }
-};
+export const isOffline = (): boolean => !navigator.onLine;

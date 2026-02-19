@@ -1,174 +1,213 @@
 /**
- * Tableau virtuel avec react-window pour de meilleures performances
- * Affiche uniquement les lignes visibles dans le viewport
+ * VirtualTable - LBP Transit
+ *
+ * Wrapper autour de la Table Ant Design v5 avec virtualisation native.
+ * Active le scroll virtuel automatiquement quand la liste dépasse le seuil.
  */
 
-import React, { useMemo, useRef, useEffect, useState } from "react";
-import { FixedSizeList as List } from "react-window";
-import { Table } from "antd";
-import type { ColumnsType, TableProps } from "antd/es/table";
-import "./VirtualTable.css";
+import React, { useState, useEffect, useCallback } from 'react'
+import { Table } from 'antd'
+import type { ColumnsType } from 'antd/es/table'
+import './VirtualTable.css'
 
-interface VirtualTableProps<T> extends Omit<TableProps<T>, "components"> {
-  scrollY: number;
-  rowHeight?: number;
+/* ═══════════════════════════════════════
+   CONSTANTES
+═══════════════════════════════════════ */
+
+const VIRTUAL_THRESHOLD = 50
+const DEFAULT_SCROLL_Y = 520
+const ROW_HEIGHT = 54
+
+/* ═══════════════════════════════════════
+   HOOK : hauteur responsive
+═══════════════════════════════════════ */
+
+export function useTableHeight(
+  minHeight = 300,
+  maxHeight = 700,
+  offset = 280
+): number {
+  const [height, setHeight] = useState(DEFAULT_SCROLL_Y)
+
+  const calculate = useCallback(() => {
+    const available = window.innerHeight - offset
+    setHeight(Math.min(Math.max(available, minHeight), maxHeight))
+  }, [minHeight, maxHeight, offset])
+
+  useEffect(() => {
+    calculate()
+    window.addEventListener('resize', calculate, { passive: true })
+    return () => window.removeEventListener('resize', calculate)
+  }, [calculate])
+
+  return height
 }
 
-/**
- * Tableau virtuel optimisé pour de grandes listes
- */
-export function VirtualTable<T extends Record<string, any>>({
-  columns,
+/* ═══════════════════════════════════════
+   TYPES simplifiés (évite l'ambiguïté namespace antd)
+═══════════════════════════════════════ */
+
+export type { ColumnsType }
+
+export interface VirtualTableProps<T> {
+  dataSource?: T[]
+  columns?: ColumnsType<T>
+  rowKey?: string | ((record: T) => string | number)
+  loading?: boolean
+  /** Pagination Ant Design (objet ou false) */
+  pagination?: Record<string, any> | false
+  scroll?: { x?: number | string | true; y?: number | string }
+  /** Objet locale Ant Design Table (emptyText, etc.) */
+  locale?: Record<string, any>
+  onRow?: (record: T, index: number) => React.HTMLAttributes<HTMLElement>
+  onChange?: (pagination: any, filters: any, sorter: any, extra: any) => void
+  rowSelection?: Record<string, any>
+  expandable?: Record<string, any>
+  summary?: (data: readonly T[]) => React.ReactNode
+  className?: string
+  size?: 'small' | 'middle' | 'large'
+  bordered?: boolean
+  showHeader?: boolean
+  /** Seuil à partir duquel la virtualisation s'active (défaut : 50) */
+  virtualThreshold?: number
+  /** Hauteur du viewport virtuel en px (calculée auto si absent) */
+  scrollY?: number
+  /** Hauteur de chaque ligne en px (défaut : 54) */
+  rowHeight?: number
+  /** Label pour le "Total : X {totalLabel}" de la pagination */
+  totalLabel?: string
+}
+
+/* ═══════════════════════════════════════
+   COMPOSANT PRINCIPAL
+═══════════════════════════════════════ */
+
+export function VirtualTable<T extends object>({
   dataSource,
+  columns,
   rowKey,
-  scrollY = 400,
-  rowHeight = 54,
-  ...tableProps
+  loading,
+  pagination,
+  scroll,
+  locale,
+  onRow,
+  onChange,
+  rowSelection,
+  expandable,
+  summary,
+  className = '',
+  size,
+  bordered,
+  showHeader,
+  virtualThreshold = VIRTUAL_THRESHOLD,
+  scrollY,
+  rowHeight = ROW_HEIGHT,
+  totalLabel = 'éléments',
 }: VirtualTableProps<T>) {
-  const [widths, setWidths] = useState<number[]>([]);
-  const [totalWidth, setTotalWidth] = useState(0);
-  const tableRef = useRef<HTMLDivElement>(null);
+  const autoHeight = useTableHeight()
 
-  // Calculer les largeurs de colonnes
-  useEffect(() => {
-    if (!columns || columns.length === 0) return;
+  const count = Array.isArray(dataSource) ? dataSource.length : 0
+  const shouldVirtualize = count >= virtualThreshold
+  const viewportHeight = scrollY ?? autoHeight
 
-    const calculatedWidths = columns.map((col) => {
-      if (typeof col.width === "number") {
-        return col.width;
-      }
-      if (col.width) {
-        // Convertir les largeurs comme "200px" en nombres
-        const match = String(col.width).match(/^(\d+)/);
-        return match ? parseInt(match[1], 10) : 150;
-      }
-      return 150; // Largeur par défaut
-    });
+  const mergedScroll = {
+    ...scroll,
+    ...(shouldVirtualize ? { y: viewportHeight } : {}),
+  }
 
-    setWidths(calculatedWidths);
-    setTotalWidth(calculatedWidths.reduce((sum, w) => sum + w, 0));
-  }, [columns]);
+  const mergedPagination =
+    pagination === false
+      ? (false as const)
+      : {
+          showSizeChanger: true,
+          pageSizeOptions: ['20', '50', '100', '200'],
+          showTotal: (total: number) =>
+            `Total : ${total.toLocaleString('fr-FR')} ${totalLabel}`,
+          ...(typeof pagination === 'object' && pagination !== null
+            ? pagination
+            : {}),
+        }
 
-  // Composant de ligne virtuelle
-  const Row = ({
-    index,
-    style,
-  }: {
-    index: number;
-    style: React.CSSProperties;
-  }) => {
-    const row = dataSource?.[index];
-    if (!row) return null;
-
-    const key =
-      typeof rowKey === "function" ? (rowKey as any)(row, index) : row[rowKey as string];
-
-    return (
-      <div
-        key={key}
-        style={{
-          ...style,
-          display: "flex",
-          borderBottom: "1px solid #f0f0f0",
-          alignItems: "center",
-        }}
-        className="virtual-table-row"
-      >
-        {columns?.map((col: any, colIndex: number) => {
-          // Vérifier si c'est une colonne simple (ColumnType) et non un groupe
-          const column = col;
-          const dataIndex = column.dataIndex;
-
-          const value = dataIndex
-            ? (row[dataIndex as string] as any)
-            : undefined;
-
-          const renderedValue = column.render
-            ? column.render(value, row, index)
-            : value;
-
-          return (
-            <div
-              key={col.key || colIndex}
-              style={{
-                width: widths[colIndex] || 150,
-                padding: "12px 16px",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                flexShrink: 0,
-              }}
-              title={String(renderedValue)}
-            >
-              {renderedValue}
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  // En-têtes de colonnes
-  const HeaderRow = () => (
-    <div
-      style={{
-        display: "flex",
-        borderBottom: "2px solid #f0f0f0",
-        backgroundColor: "#fafafa",
-        position: "sticky",
-        top: 0,
-        zIndex: 1,
-      }}
-      className="virtual-table-header"
-    >
-      {columns?.map((col, colIndex) => {
-        const column = col as any;
-        const title =
-          typeof column.title === "function"
-            ? column.title({})
-            : column.title || "";
-
-        return (
-          <div
-            key={column.key || colIndex}
-            style={{
-              width: widths[colIndex] || 150,
-              padding: "12px 16px",
-              fontWeight: 600,
-              flexShrink: 0,
-            }}
-          >
-            {title}
-          </div>
-        );
-      })}
-    </div>
-  );
-
-  if (!dataSource || dataSource.length === 0) {
-    return (
-      <Table
-        {...tableProps}
-        columns={columns}
-        dataSource={dataSource}
-        rowKey={rowKey}
-        pagination={false}
-      />
-    );
+  const mergedOnRow = (record: T, index: number) => {
+    const base = onRow ? onRow(record, index) : {}
+    if (!shouldVirtualize) return base
+    const existingStyle = (base as React.HTMLAttributes<HTMLElement>).style ?? {}
+    return { ...base, style: { ...existingStyle, height: rowHeight } }
   }
 
   return (
-    <div ref={tableRef} className="virtual-table-container">
-      <HeaderRow />
-      <List
-        height={scrollY}
-        itemCount={dataSource.length}
-        itemSize={rowHeight}
-        width="100%"
-        className="virtual-table-list"
-      >
-        {Row}
-      </List>
+    <div className={`virtual-table-wrapper ${shouldVirtualize ? 'is-virtual' : ''}`}>
+      <Table<T>
+        dataSource={dataSource}
+        columns={columns}
+        rowKey={rowKey}
+        loading={loading}
+        scroll={mergedScroll}
+        pagination={mergedPagination}
+        locale={locale}
+        onRow={mergedOnRow}
+        onChange={onChange}
+        rowSelection={rowSelection}
+        expandable={expandable}
+        summary={summary}
+        size={size}
+        bordered={bordered}
+        showHeader={showHeader}
+        virtual={shouldVirtualize}
+        className={`lbp-table ${shouldVirtualize ? 'lbp-table-virtual' : ''} ${className}`}
+      />
+
+      {shouldVirtualize && process.env.NODE_ENV === 'development' && (
+        <div className="virtual-badge">
+          ⚡ {count} lignes virtualisées
+        </div>
+      )}
     </div>
-  );
+  )
+}
+
+/* ═══════════════════════════════════════
+   HOOK : pagination serveur
+═══════════════════════════════════════ */
+
+export interface PaginationState {
+  page: number
+  limit: number
+}
+
+/**
+ * Gère la pagination serveur.
+ *
+ * ```tsx
+ * const { pagination, antdPagination, resetPage } = usePaginatedTable()
+ * // Au changement de filtre → resetPage()
+ * const { data } = useQuery({ queryFn: () => service.getAll(pagination) })
+ * <VirtualTable
+ *   dataSource={data?.data}
+ *   pagination={{ ...antdPagination, total: data?.total }}
+ * />
+ * ```
+ */
+export function usePaginatedTable(initialPage = 1, initialLimit = 20) {
+  const [pagination, setPagination] = useState<PaginationState>({
+    page: initialPage,
+    limit: initialLimit,
+  })
+
+  const resetPage = useCallback(() => {
+    setPagination((prev) => ({ ...prev, page: 1 }))
+  }, [])
+
+  const antdPagination = {
+    current: pagination.page,
+    pageSize: pagination.limit,
+    onChange: (page: number, pageSize: number) => {
+      setPagination({ page, limit: pageSize })
+    },
+    showSizeChanger: true,
+    showQuickJumper: false,
+    pageSizeOptions: ['20', '50', '100', '200'],
+  }
+
+  return { pagination, setPagination, antdPagination, resetPage }
 }

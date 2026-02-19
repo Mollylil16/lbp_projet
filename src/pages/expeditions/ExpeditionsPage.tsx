@@ -7,6 +7,8 @@ import { expeditionsService } from '@/services/expeditions.service'
 import { colisService } from '@/services/colis.service'
 import { Expedition, Colis } from '@/types'
 import { formatDate } from '@/utils/format'
+import { ExpeditionsSkeleton } from '@components/common/SkeletonLoader'
+import { EmptyExpeditionsList } from '@components/common/EmptyState'
 
 const { Option } = Select
 
@@ -52,15 +54,26 @@ export const ExpeditionsPage: React.FC = () => {
     const handleOpenDrawer = async (expedition: Expedition) => {
         setSelectedExpedition(expedition)
         setIsDrawerVisible(true)
-        // Charger les colis disponibles (non assignés)
+        // Charger les colis disponibles (validés, non assignés à une expédition)
         try {
-            // TODO: Ajouter un endpoint pour filtrer les colis sans expédition
-            const allColis = await colisService.getAll()
-            // Filtrer localement pour l'instant (à optimiser backend)
-            const filtered = allColis.filter((c: any) => !c.expedition && c.agence?.id === user?.agency?.id)
+            const response = await colisService.getAll({
+                statut: 'valide',
+                sans_expedition: true,
+                agence_id: user?.agency?.id,
+            })
+            // Sécurisation : si le backend ne supporte pas encore les filtres,
+            // on filtre côté client en fallback
+            const data = Array.isArray(response) ? response : (response as any)?.data || []
+            const filtered = data.filter(
+                (c: any) =>
+                    !c.expedition_id &&
+                    !c.manifeste_id &&
+                    (!user?.agency?.id || c.agence?.id === user.agency.id)
+            )
             setAvailableColis(filtered)
         } catch (error) {
-            console.error(error)
+            console.error('Erreur chargement colis disponibles:', error)
+            setAvailableColis([])
         }
     }
 
@@ -136,6 +149,15 @@ export const ExpeditionsPage: React.FC = () => {
         },
     ]
 
+    if (loading && expeditions.length === 0) {
+        return (
+            <div style={{ padding: 24 }}>
+                <h2>Gestion des Manifestes Internationaux</h2>
+                <ExpeditionsSkeleton />
+            </div>
+        )
+    }
+
     return (
         <div style={{ padding: 24 }}>
             <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
@@ -145,7 +167,15 @@ export const ExpeditionsPage: React.FC = () => {
                 </Button>
             </div>
 
-            <Table columns={columns} dataSource={expeditions} rowKey="id" loading={loading} />
+            <Table
+              columns={columns}
+              dataSource={expeditions}
+              rowKey="id"
+              loading={loading}
+              locale={{
+                emptyText: <EmptyExpeditionsList onCreateClick={() => setIsModalVisible(true)} />,
+              }}
+            />
 
             <Modal
                 title="Créer une nouvelle expédition"

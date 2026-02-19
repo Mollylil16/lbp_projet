@@ -15,6 +15,7 @@ import { useAlerts } from '@services/alerts.service'
 import { useAuth } from '@hooks/useAuth'
 import { PredictionCard } from '@components/dashboard/PredictionCard'
 import { AIIntelligencePanel } from '@components/dashboard/AIIntelligencePanel'
+import { DashboardSkeleton } from '@components/common/SkeletonLoader'
 import './DashboardPage.css'
 
 const { Title } = Typography
@@ -85,6 +86,20 @@ export const DashboardPage: React.FC = () => {
       if (interval) clearInterval(interval)
     }
   }, [refetchStats, refetchCaisse, refetchActivities])
+
+  const isInitialLoading = statsLoading && !stats
+
+  if (isInitialLoading) {
+    return (
+      <div className="dashboard-page">
+        <div className="dashboard-header">
+          <Title level={2} className="dashboard-title">Tableau de Bord</Title>
+          <div className="dashboard-subtitle">Chargement en cours…</div>
+        </div>
+        <DashboardSkeleton />
+      </div>
+    )
+  }
 
   return (
     <div className="dashboard-page">

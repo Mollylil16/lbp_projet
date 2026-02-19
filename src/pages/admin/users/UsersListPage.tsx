@@ -28,10 +28,13 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import { User } from "@types";
 import { formatDate } from "@utils/format";
+import { usersService } from "@services/users.service";
 import { PERMISSIONS } from "@constants/permissions";
 import { WithPermission } from "@components/common/WithPermission";
-import { usersService } from "@services/users.service";
 import { useQuery } from "@tanstack/react-query";
+import { UsersListSkeleton } from "@components/common/SkeletonLoader";
+import { EmptyUsersList, EmptySearchState, EmptyErrorState } from "@components/common/EmptyState";
+import { VirtualTable } from "@components/common/VirtualTable";
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -49,8 +52,17 @@ export const UsersListPage: React.FC = () => {
   });
 
   if (error) {
-    message.error('Erreur lors du chargement des utilisateurs');
     console.error('Error loading users:', error);
+    return (
+      <div>
+        <Title level={2}>Gestion des Utilisateurs</Title>
+        <EmptyErrorState
+          title="Erreur de chargement"
+          description="Impossible de charger les utilisateurs. Vérifiez votre connexion ou rechargez la page."
+          onRetry={() => refetch()}
+        />
+      </div>
+    )
   }
 
   const columns: ColumnsType<User> = [
@@ -143,6 +155,15 @@ export const UsersListPage: React.FC = () => {
     },
   ];
 
+  if (isLoading && !users) {
+    return (
+      <div>
+        <Title level={2}>Gestion des Utilisateurs</Title>
+        <UsersListSkeleton />
+      </div>
+    )
+  }
+
   return (
     <div>
       <Title level={2}>Gestion des Utilisateurs</Title>
@@ -193,7 +214,7 @@ export const UsersListPage: React.FC = () => {
 
       {/* TABLEAU */}
       <Card>
-        <Table
+        <VirtualTable<User>
           columns={columns}
           dataSource={users?.filter((user) => {
             if (!searchTerm) return true;
@@ -207,10 +228,23 @@ export const UsersListPage: React.FC = () => {
           rowKey="id"
           scroll={{ x: 1000 }}
           loading={isLoading}
+          totalLabel="utilisateurs"
+          locale={{
+            emptyText: searchTerm
+              ? <EmptySearchState
+                  searchTerm={searchTerm}
+                  onClearSearch={() => setSearchTerm('')}
+                  onCreateClick={() => { setIsCreateMode(true); setIsModalOpen(true); }}
+                  createLabel="Créer un utilisateur"
+                />
+              : <EmptyUsersList
+                  onCreateClick={() => { setIsCreateMode(true); setIsModalOpen(true); }}
+                />,
+          }}
           pagination={{
             pageSize: 20,
             showSizeChanger: true,
-            showTotal: (total: number) => `Total: ${total} utilisateurs`,
+            showTotal: (total: number) => `Total : ${total} utilisateurs`,
           }}
         />
       </Card>
@@ -266,10 +300,28 @@ const UserForm: React.FC<UserFormProps> = ({
     status: user?.status || "active",
   });
 
-  const handleSubmit = () => {
-    // TODO: Appel API
-    console.log("Submit user:", formData);
-    onSuccess();
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!formData.username.trim() || !formData.full_name.trim()) {
+      message.error("Le nom d'utilisateur et le nom complet sont obligatoires.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      if (isCreateMode) {
+        await usersService.create(formData);
+        message.success("Utilisateur créé avec succès.");
+      } else if (user?.id) {
+        await usersService.update(user.id, formData);
+        message.success("Utilisateur modifié avec succès.");
+      }
+      onSuccess();
+    } catch (error: any) {
+      message.error(error?.response?.data?.message || "Erreur lors de l'enregistrement.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -334,7 +386,7 @@ const UserForm: React.FC<UserFormProps> = ({
           </span>
         </div>
         <Space>
-          <Button type="primary" onClick={handleSubmit} size="large">
+          <Button type="primary" onClick={handleSubmit} size="large" loading={submitting}>
             Enregistrer
           </Button>
           <Button onClick={onCancel} size="large">

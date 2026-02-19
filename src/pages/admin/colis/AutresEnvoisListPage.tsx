@@ -92,6 +92,7 @@ export const ColisAutresEnvoisListPage: React.FC = () => {
           <ColisForm
             formeEnvoi="autres_envoi"
             onSubmit={handleSubmit}
+            onCancel={handleCancel}
             initialData={
               selectedColis
                 ? {

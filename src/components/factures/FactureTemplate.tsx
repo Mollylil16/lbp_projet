@@ -36,6 +36,10 @@ interface FactureTemplateProps {
     lieu_dest?: string;
     tel_dest?: string;
     email_dest?: string;
+    nom_recup?: string;
+    adresse_recup?: string;
+    tel_recup?: string;
+    email_recup?: string;
     nom_marchandise?: string;
     nbre_colis?: number;
     nbre_articles?: number;
@@ -155,6 +159,24 @@ export const FactureTemplate: React.FC<FactureTemplateProps> = ({
                 {colis.tel_dest && <Text>{colis.tel_dest}</Text>}
                 {colis.email_dest && (
                   <Text type="secondary">{colis.email_dest}</Text>
+                )}
+              </Space>
+            </Card>
+          )}
+
+          {/* Récupérateur */}
+          {colis?.nom_recup && (
+            <Card
+              title="Récupérateur"
+              size="small"
+              className="facture-address-card"
+            >
+              <Space direction="vertical" size="small">
+                <Text strong>{colis.nom_recup}</Text>
+                {colis.adresse_recup && <Text>{colis.adresse_recup}</Text>}
+                {colis.tel_recup && <Text>{colis.tel_recup}</Text>}
+                {colis.email_recup && (
+                  <Text type="secondary">{colis.email_recup}</Text>
                 )}
               </Space>
             </Card>

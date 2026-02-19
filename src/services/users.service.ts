@@ -2,6 +2,47 @@ import { User } from '@types'
 import { apiService } from './api.service'
 
 class UsersService {
+  async create(data: {
+    username: string
+    full_name: string
+    email?: string
+    phone?: string
+    role: string
+    status: string
+    password?: string
+  }): Promise<User> {
+    return apiService.post<User>('/users', {
+      username: data.username,
+      fullname: data.full_name,
+      email: data.email,
+      phone: data.phone,
+      role: data.role,
+      isActive: data.status === 'active',
+      password: data.password || 'ChangeMe123!',
+    })
+  }
+
+  async update(id: number, data: {
+    username?: string
+    full_name?: string
+    email?: string
+    phone?: string
+    role?: string
+    status?: string
+  }): Promise<User> {
+    return apiService.patch<User>(`/users/${id}`, {
+      fullname: data.full_name,
+      email: data.email,
+      phone: data.phone,
+      role: data.role,
+      isActive: data.status === 'active',
+    })
+  }
+
+  async delete(id: number): Promise<void> {
+    return apiService.delete<void>(`/users/${id}`)
+  }
+
   async getAll(): Promise<User[]> {
     const users = await apiService.get<any[]>('/users')
 

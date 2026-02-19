@@ -44,6 +44,7 @@ import {
   EmptyListState,
   EmptySearchState,
 } from "@components/common/EmptyState";
+import { VirtualTable } from "@components/common/VirtualTable";
 import { exportTableToPDF, exportTableToExcel } from "@utils/export";
 import { message } from "antd";
 import { useTranslation } from "@hooks/useTranslation";
@@ -441,12 +442,13 @@ export const ColisList: React.FC<ColisListProps> = ({
             />
           )
         ) : (
-          <Table
+          <VirtualTable<Colis>
             columns={columns}
             dataSource={data.data}
             rowKey="id"
             className="premium-table"
             scroll={{ x: 1200 }}
+            totalLabel="colis"
             pagination={{
               current: pagination.page,
               pageSize: pagination.limit,

@@ -9,12 +9,16 @@ import {
   SettingOutlined,
 } from '@ant-design/icons'
 import { useAuth } from '@hooks/useAuth'
+import { useTheme } from '@contexts/ThemeContext'
+import { useKeyboardNav } from '@hooks/useKeyboardNav'
 import type { MenuProps } from 'antd'
 import { SidebarMenu } from './SidebarMenu'
 import { SkipToMain } from '../common/SkipToMain'
 import { ThemeToggle } from '../common/ThemeToggle'
 import { NotificationBell } from '../notifications/NotificationBell'
 import { OfflineIndicator } from '../common/OfflineIndicator'
+import { KeyboardShortcutsHelp } from '../common/KeyboardShortcutsHelp'
+import { Breadcrumbs } from '../common/Breadcrumbs'
 import { useServiceWorker } from '../../hooks/useServiceWorker'
 import { useMobileMenu } from '../../hooks/useMobileMenu'
 import '../../styles/responsive.css'
@@ -25,8 +29,10 @@ const { Header, Sider, Content } = Layout
 export const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false)
   const { user, logout } = useAuth()
+  const { isDark } = useTheme()
   const { isMobile, isMenuOpen, closeMenu, toggleMenu } = useMobileMenu()
-  useServiceWorker() // Enregistrer le service worker
+  useServiceWorker()    // Enregistre le service worker
+  useKeyboardNav()      // Active les raccourcis clavier globaux
 
   const userMenuItems: any[] = [
     {
@@ -63,6 +69,7 @@ export const MainLayout: React.FC = () => {
     <Layout className="main-layout">
       <SkipToMain mainId="main-content" />
       <OfflineIndicator />
+      <KeyboardShortcutsHelp />
       {/* Overlay pour mobile */}
       {isMobile && isMenuOpen && (
         <div className="sidebar-overlay active" onClick={closeMenu} aria-hidden="true" />
@@ -71,7 +78,7 @@ export const MainLayout: React.FC = () => {
         trigger={null}
         collapsible
         collapsed={!isMobile && collapsed}
-        theme="light"
+        theme={isDark ? 'dark' : 'light'}
         width={280}
         className={`modern-sidebar ${isMobile && isMenuOpen ? 'mobile-open' : ''}`}
       >
@@ -138,7 +145,10 @@ export const MainLayout: React.FC = () => {
           role="main"
           aria-label="Contenu principal"
         >
-          <Outlet />
+          <Breadcrumbs />
+          <div className="page-content">
+            <Outlet />
+          </div>
         </Content>
       </Layout>
     </Layout>

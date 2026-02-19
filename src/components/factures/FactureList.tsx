@@ -41,6 +41,9 @@ import { useQuery } from "@tanstack/react-query";
 import { PaginationParams } from "@types";
 import { WithPermission } from "@components/common/WithPermission";
 import { PERMISSIONS } from "@constants/permissions";
+import { FactureListSkeleton } from "@components/common/SkeletonLoader";
+import { EmptyFacturesList, EmptySearchState, EmptyErrorState } from "@components/common/EmptyState";
+import { VirtualTable } from "@components/common/VirtualTable";
 import toast from "react-hot-toast";
 
 const { RangePicker } = DatePicker;
@@ -283,6 +286,10 @@ export const FactureList: React.FC<FactureListProps> = ({ type, onView }) => {
     },
   ];
 
+  if (isLoading && !data) {
+    return <FactureListSkeleton />
+  }
+
   return (
     <div>
       {/* BARRE DE FILTRES ET RECHERCHE */}
@@ -340,18 +347,24 @@ export const FactureList: React.FC<FactureListProps> = ({ type, onView }) => {
 
       {/* TABLEAU */}
       <Card>
-        <Table
+        <VirtualTable<FactureColis>
           columns={columns}
           dataSource={data?.data || []}
           loading={isLoading}
           rowKey="id"
           scroll={{ x: 1200 }}
+          totalLabel="factures"
+          locale={{
+            emptyText: searchTerm
+              ? <EmptySearchState searchTerm={searchTerm} onClearSearch={() => { setSearchTerm(''); setPagination({ ...pagination, page: 1 }); }} />
+              : <EmptyFacturesList />,
+          }}
           pagination={{
             current: pagination.page,
             pageSize: pagination.limit,
             total: data?.total || 0,
             showSizeChanger: true,
-            showTotal: (total: number) => `Total: ${total} factures`,
+            showTotal: (total: number) => `Total : ${total} factures`,
             pageSizeOptions: ["10", "20", "50", "100"],
           }}
           onChange={handleTableChange}

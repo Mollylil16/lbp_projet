@@ -56,12 +56,17 @@ export const APP_CONFIG = {
 
   // Modes de paiement
   modesPaiement: [
-    { value: 0, label: 'Comptant' },
-    { value: 30, label: '30 jours' },
-    { value: 45, label: '45 jours' },
-    { value: 60, label: '60 jours' },
-    { value: 90, label: '90 jours' },
-  ] as const,
+    { value: 'especes',  label: 'Espèces',        color: 'green'    },
+    { value: 'wave',     label: 'Wave',            color: 'blue'     },
+    { value: 'om',       label: 'Orange Money',    color: 'orange'   },
+    { value: 'comptant', label: 'Comptant',        color: 'cyan'     },
+    { value: 'cheque',   label: 'Chèque',          color: 'purple'   },
+    { value: 'virement', label: 'Virement',        color: 'geekblue' },
+    { value: '30j',      label: 'Crédit 30 jours', color: 'gold'     },
+    { value: '45j',      label: 'Crédit 45 jours', color: 'gold'     },
+    { value: '60j',      label: 'Crédit 60 jours', color: 'gold'     },
+    { value: '90j',      label: 'Crédit 90 jours', color: 'gold'     },
+  ],
 
   // Devise
   devise: 'FCFA',
